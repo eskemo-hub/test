@@ -1,0 +1,147 @@
+@font-face {
+    font-family: 'Helvetica Now Display';
+    src: url('https://aidencrookcom-dev-ed--c.develop.vf.force.com/resource/1722227109000/helveticanowtext?') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+}
+
+.shortcut-container {
+    display: grid;
+    gap: 20px; /* Gap between items */
+    justify-items: center;
+    align-items: start;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Ensure proper grid behavior */
+}
+
+.shortcut-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: left;
+    height: 60px; /* Set a fixed height for consistency */
+    width: 100%; /* Ensure full width of the grid cell */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
+.shortcut-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+    width: 100%; /* Ensure link takes the full width */
+}
+
+.shortcut-image {
+    width: 24px; /* Adjust size as needed */
+    height: 24px; /* Adjust size as needed */
+    margin-right: 10px; /* Add space between image and text */
+}
+
+.shortcut-name {
+    font-size: 14px;
+}
+
+.no-shortcuts {
+    text-align: center;
+    font-size: 16px;
+    color: gray;
+}
+    .h1 {
+        color: var(--primary-grey-dark, #2E2E2E);
+        /* Desktop/H1 */
+        font-family: "Helvetica Now Display";
+        font-size: 60px;
+        font-style: normal;
+        font-weight: 700;
+        line-height: 100%; /* 60px */
+    }
+
+    .h2 {
+        color: var(--primary-grey-dark, #2E2E2E);
+        /* Desktop/H2 */
+        font-family: "Helvetica Now Display";
+        font-size: 48px;
+        font-style: normal;
+        font-weight: 700;
+        line-height: 100%; /* 48px */
+    }
+
+    .h3 {
+        color: var(--primary-grey-dark, #2E2E2E);
+        /* Desktop/H3 */
+        font-family: "Helvetica Now Display";
+        font-size: 32px;
+        font-style: normal;
+        font-weight: 700;
+        line-height: 105%; /* 33.6px */
+    }
+    .h4 {
+        color: var(--primary-grey-dark, #2E2E2E);
+
+        /* Desktop/H4 */
+        font-family: "Helvetica Now Display";
+        font-size: 22px;
+        font-style: normal;
+        font-weight: 700;
+        line-height: 110%; /* 24.2px */
+        letter-spacing: 0.22px;
+    }
+    .h5 {
+        color: var(--primary-grey-dark, #2E2E2E);
+        leading-trim: both;
+        text-edge: cap;
+        
+        /* Desktop/H5 */
+        font-family: "Helvetica Now Text";
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 500;
+        line-height: 100%; /* 16px */
+    }
+    .h6 {
+        color: var(--primary-grey-dark, #2E2E2E);
+        leading-trim: both;
+        text-edge: cap;
+        
+        /* Desktop/H6 */
+        font-family: "Helvetica Now Text";
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 500;
+        line-height: 100%; /* 14px */    
+    }
+    .h7 {
+        color: var(--primary-grey-dark, #2E2E2E);
+        leading-trim: both;
+        text-edge: cap;
+        
+        /* Desktop/H7 */
+        font-family: "DIN Condensed";
+        font-size: 12px;
+        font-style: normal;
+        font-weight: 700;
+        line-height: 110%; /* 13.2px */
+        letter-spacing: 0.6px;
+        text-transform: uppercase;    
+    }
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .shortcut-container {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Adjust for smaller screens */
+    }
+
+    .shortcut-item {
+        height: auto; /* Allow flexible height for smaller screens */
+        padding: 10px; /* Add padding for better touch target */
+    }
+
+    .shortcut-image {
+        width: 20px; /* Adjust image size for smaller screens */
+        height: 20px; /* Adjust image size for smaller screens */
+        margin-right: 8px; /* Adjust margin for smaller screens */
+    }
+
+    .shortcut-name {
+        font-size: 12px; /* Adjust font size for smaller screens */
+    }
+}
