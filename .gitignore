@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Local env / secrets (DATABASE_URL, COOKIE_SECRET overrides).
+# The dev fallback in config.js is committed; this is only for local overrides.
+.env
+.env.*
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

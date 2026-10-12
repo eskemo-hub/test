@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard — test</title>
+  <meta name="color-scheme" content="light dark" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="./index.html" aria-label="test — home">test<span class="brand-dot" aria-hidden="true">.</span></a>
+      <nav class="site-nav" aria-label="Primary">
+        <ul>
+          <li><a href="./index.html">Home</a></li>
+          <li><a href="./dashboard.html">Dashboard</a></li>
+          <li>
+            <button type="button" class="nav-signout" id="nav-signout">Sign out</button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="auth-main">
+    <section class="auth-card">
+      <h1 class="auth-title">Dashboard</h1>
+      <p class="auth-sub">You're signed in.</p>
+
+      <div class="user-info" id="user-info">
+        <p>Loading your account&hellip;</p>
+      </div>
+
+      <button type="button" class="btn btn-ghost btn-block" id="signout-btn">Sign out</button>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>&copy; <span id="year"></span> test workspace.</p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var el = document.getElementById('year');
+      if (el) el.textContent = new Date().getFullYear();
+    })();
+  </script>
+  <script src="./app.js"></script>
+</body>
+</html>

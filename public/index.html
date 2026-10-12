@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>test — a tiny landing site</title>
+  <meta name="description" content="A clean, single-page landing site built with no build tooling." />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="#top" aria-label="test — home">test<span class="brand-dot" aria-hidden="true">.</span></a>
+      <nav class="site-nav" aria-label="Primary">
+        <ul>
+          <li><a href="#about">About</a></li>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#contact">Contact</a></li>
+          <li class="nav-auth" data-auth="signed-out"><a href="./login.html">Sign in</a></li>
+          <li class="nav-auth" data-auth="signed-in" hidden><a href="./dashboard.html">Dashboard</a></li>
+          <li class="nav-auth" data-auth="signed-in" hidden>
+            <button type="button" class="nav-signout" id="nav-signout">Sign out</button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section id="top" class="hero">
+      <div class="container hero-inner">
+        <p class="eyebrow">EasyCoder workspace</p>
+        <h1 class="hero-title">A tiny landing site, ready to ship.</h1>
+        <p class="hero-sub">Plain HTML and CSS. No build step, no dependencies, no external requests.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="./register.html">Create an account</a>
+          <a class="btn btn-ghost" href="#features">See features</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="about" class="section">
+      <div class="container">
+        <h2>What this is</h2>
+        <p>
+          A clean, single-page starting point for the <code>test</code> repo. It is a static
+          site served straight from the repo — open <code>index.html</code> in a browser and it
+          works. The styling lives in <code>styles.css</code> so it stays easy to tweak.
+        </p>
+        <p>
+          It uses the system font stack so it renders instantly on any device, and it adapts
+          to your system's light or dark theme automatically.
+        </p>
+        <p>
+          This build also includes a small auth demo: a real Postgres-backed register and
+          login form, a signed session cookie, and a protected dashboard at
+          <a href="./dashboard.html">/dashboard.html</a>.
+        </p>
+      </div>
+    </section>
+
+    <section id="features" class="section section-alt">
+      <div class="container">
+        <h2>Features</h2>
+        <ul class="feature-grid">
+          <li class="feature">
+            <h3>No build tooling</h3>
+            <p>Edit HTML and CSS, refresh the browser, ship. That's the whole loop.</p>
+          </li>
+          <li class="feature">
+            <h3>Responsive by default</h3>
+            <p>Layouts adapt from phone to wide desktop without media-query gymnastics.</p>
+          </li>
+          <li class="feature">
+            <h3>System fonts</h3>
+            <p>Uses the platform's UI font — no network calls, no flash of unstyled text.</p>
+          </li>
+          <li class="feature">
+            <h3>Real auth</h3>
+            <p>Backed by a real Postgres database with bcrypt password hashing and signed cookies.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="contact" class="section cta-banner">
+      <div class="container cta-inner">
+        <h2>Ready when you are.</h2>
+        <p>Drop in your own copy, swap the colors, push to preview — and you're live.</p>
+        <a class="btn btn-primary" href="#top">Back to top</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>&copy; <span id="year"></span> test workspace.</p>
+      <p class="muted">Built with plain HTML and CSS.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Tiny inline enhancement: keep the copyright year current without a build step.
+    // Stays offline — no external requests, no console noise.
+    (function () {
+      var el = document.getElementById('year');
+      if (el) el.textContent = new Date().getFullYear();
+    })();
+  </script>
+  <script src="./app.js"></script>
+</body>
+</html>
