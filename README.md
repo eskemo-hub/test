@@ -1,8 +1,10 @@
-# test
+# EasyCoder workspace demo
 
-A small Node/Express app for the `test` repo: a static landing page plus a
+A small Node/Express app for the `test` workspace: a static landing page plus a
 real, Postgres-backed register / login / logout flow with a dashboard that
-has an account panel, personal notes, and (for admins) a stats view.
+has an account panel, personal notes, and (for admins) a stats view. This is
+one of many tiny apps shipped from [easycoder.dev](https://easycoder.dev)
+workspaces — the URL is `test.app.easycoder.dev` and the branding is content.
 
 ## Stack
 

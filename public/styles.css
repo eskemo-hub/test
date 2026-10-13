@@ -12,10 +12,18 @@
   --text: #0f172a;
   --text-muted: #475569;
   --border: #e2e8f0;
-  --accent: #2563eb;
+  --accent: #7c3aed;
   --accent-contrast: #ffffff;
-  --accent-hover: #1d4ed8;
-  --focus: #93c5fd;
+  --accent-hover: #6d28d9;
+  --focus: #c4b5fd;
+
+  --terminal-bg: #0b1220;
+  --terminal-fg: #e6edf7;
+  --terminal-muted: #94a3b8;
+  --terminal-prompt: #c4b5fd;
+  --terminal-success: #86efac;
+  --cta-bg: #1e1b4b;
+  --cta-fg: #ede9fe;
 
   --danger: #b91c1c;
   --danger-bg: color-mix(in srgb, #b91c1c 10%, transparent);
@@ -31,10 +39,18 @@
     --text: #e6edf7;
     --text-muted: #94a3b8;
     --border: #1f2937;
-    --accent: #60a5fa;
+    --accent: #a78bfa;
     --accent-contrast: #0b1220;
-    --accent-hover: #93c5fd;
-    --focus: #1e3a8a;
+    --accent-hover: #c4b5fd;
+    --focus: #c4b5fd;
+
+    --terminal-bg: #050816;
+    --terminal-fg: #e6edf7;
+    --terminal-muted: #64748b;
+    --terminal-prompt: #c4b5fd;
+    --terminal-success: #86efac;
+    --cta-bg: #0f0a2e;
+    --cta-fg: #ede9fe;
 
     --danger: #fca5a5;
     --danger-bg: color-mix(in srgb, #fca5a5 14%, transparent);
@@ -905,7 +921,267 @@ code {
   color: var(--text-muted);
 }
 
-/* ---------- Mobile tweaks ---------- */
+/* ---------- Terminal mockup ---------- */
+.terminal {
+  margin: 0 auto;
+  max-width: 38rem;
+  background: var(--terminal-bg);
+  color: var(--terminal-fg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--text) 6%, transparent),
+    0 10px 30px -12px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.terminal-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.8rem;
+  background: color-mix(in srgb, var(--terminal-bg) 85%, white 15%);
+  border-bottom: 1px solid color-mix(in srgb, var(--terminal-fg) 10%, transparent);
+}
+
+.terminal-dot {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--terminal-fg) 25%, transparent);
+}
+
+.terminal-dot.is-red {
+  background: #ef4444;
+}
+.terminal-dot.is-yellow {
+  background: #f59e0b;
+}
+.terminal-dot.is-green {
+  background: #22c55e;
+}
+
+.terminal pre {
+  margin: 0;
+  padding: 1rem 1.1rem;
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: var(--terminal-fg);
+  overflow-x: auto;
+}
+
+.terminal pre span.prompt {
+  color: var(--terminal-prompt);
+}
+
+.terminal pre span.arrow {
+  color: var(--terminal-success);
+}
+
+.terminal pre span.dim {
+  color: var(--terminal-muted);
+}
+
+.terminal + .terminal {
+  margin-top: 1rem;
+}
+
+/* ---------- How it works ---------- */
+.how-steps {
+  list-style: none;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  counter-reset: howstep;
+}
+
+.how-step {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem;
+  position: relative;
+  counter-increment: howstep;
+}
+
+.how-step::before {
+  content: counter(howstep, decimal-leading-zero);
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--accent);
+  margin-bottom: 0.4rem;
+  letter-spacing: 0.04em;
+}
+
+.how-step h3 {
+  font-size: 1.05rem;
+  margin: 0 0 0.4rem;
+}
+
+.how-step p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+@media (max-width: 768px) {
+  .how-steps {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Security grid ---------- */
+.security-grid {
+  list-style: none;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.security-pillar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.1rem 1.2rem;
+}
+
+.security-pillar h3 {
+  font-size: 1rem;
+  margin: 0 0 0.4rem;
+}
+
+.security-pillar p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+@media (max-width: 1024px) {
+  .security-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 540px) {
+  .security-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- FAQ ---------- */
+.faq {
+  margin: 1.25rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  max-width: 44rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.faq details {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.25rem 1rem;
+  transition: border-color 0.15s ease;
+}
+
+.faq details[open] {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+}
+
+.faq summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 0.85rem 0;
+  font-weight: 600;
+  color: var(--text);
+  position: relative;
+  padding-right: 1.8rem;
+}
+
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq summary::after {
+  content: "+";
+  position: absolute;
+  right: 0;
+  top: 0.85rem;
+  color: var(--accent);
+  font-size: 1.3rem;
+  line-height: 1;
+  font-weight: 400;
+}
+
+.faq details[open] summary::after {
+  content: "−";
+}
+
+.faq details p {
+  margin: 0 0 1rem;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+/* ---------- Closing CTA band ---------- */
+.cta-band {
+  background: var(--cta-bg);
+  color: var(--cta-fg);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.cta-band .container {
+  text-align: center;
+  padding-top: clamp(3rem, 6vw, 4.5rem);
+  padding-bottom: clamp(3rem, 6vw, 4.5rem);
+}
+
+.cta-band h2 {
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  margin: 0 0 0.6rem;
+  color: var(--cta-fg);
+}
+
+.cta-band p {
+  color: color-mix(in srgb, var(--cta-fg) 75%, transparent);
+  margin: 0 auto 1.5rem;
+  max-width: 32rem;
+}
+
+.cta-band .hero-actions {
+  justify-content: center;
+}
+
+/* ---------- Footer links ---------- */
+.footer-links {
+  display: inline-flex;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9rem;
+}
+
+.footer-links a {
+  color: var(--text-muted);
+}
+
+.footer-links a:hover,
+.footer-links a:focus-visible {
+  color: var(--accent);
+}
+
 @media (max-width: 640px) {
   .site-nav ul {
     flex-wrap: wrap;

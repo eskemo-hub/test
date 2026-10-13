@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>test — a tiny landing site</title>
-  <meta name="description" content="A clean, single-page landing site built with no build tooling." />
+  <title>EasyCoder — workspace demo</title>
+  <meta name="description" content="A tiny EasyCoder workspace demo: real auth, real notes, real Postgres. Shipped from a per-workspace container." />
   <meta name="color-scheme" content="light dark" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
@@ -13,12 +13,13 @@
 
   <header class="site-header">
     <div class="container header-inner">
-      <a class="brand" href="#top" aria-label="test — home">test<span class="brand-dot" aria-hidden="true">.</span></a>
+      <a class="brand" href="#top" aria-label="EasyCoder — home">EasyCoder<span class="brand-dot" aria-hidden="true">.</span></a>
       <nav class="site-nav" aria-label="Primary">
         <ul>
-          <li><a href="#about">About</a></li>
           <li><a href="#features">Features</a></li>
-          <li><a href="#contact">Contact</a></li>
+          <li><a href="#how">How it works</a></li>
+          <li><a href="#security">Security</a></li>
+          <li><a href="#faq">FAQ</a></li>
           <li class="nav-auth" data-auth="signed-out"><a href="./login.html">Sign in</a></li>
           <li class="nav-auth" data-auth="signed-in" hidden><a href="./dashboard.html">Dashboard</a></li>
           <li class="nav-auth" data-auth="signed-in" hidden>
@@ -32,79 +33,201 @@
   <main id="main">
     <section id="top" class="hero">
       <div class="container hero-inner">
-        <p class="eyebrow">EasyCoder workspace</p>
-        <h1 class="hero-title">A tiny landing site, ready in minutes.</h1>
-        <p class="hero-sub">Plain HTML and CSS. No build step, no dependencies, no framework to learn.</p>
+        <p class="eyebrow">EasyCoder workspace demo</p>
+        <h1 class="hero-title">Sign in, take notes, watch the chart — all running on EasyCoder.</h1>
+        <p class="hero-sub">
+          A tiny app shipped from an EasyCoder workspace. Real Postgres, real cookies, real sessions —
+          everything below is running code, not a mockup.
+        </p>
         <div class="hero-actions">
-          <a class="btn btn-primary" href="./register.html">Create an account</a>
-          <a class="btn btn-ghost" href="#features">See features</a>
+          <a class="btn btn-primary" href="./register.html">Create account</a>
+          <a class="btn btn-ghost" href="./login.html">Sign in</a>
         </div>
+        <p class="hero-sub muted" style="margin-top:1.5rem;font-size:0.9rem;">
+          Free to sign up · Real Postgres, real cookies, real sessions.
+        </p>
       </div>
     </section>
 
-    <section id="about" class="section">
+    <section class="section">
       <div class="container">
-        <h2>What this is</h2>
-        <p>
-          A clean, single-page starting point for the <code>test</code> repo. It is a static
-          site served straight from the repo — open <code>index.html</code> in a browser and it
-          works. The styling lives in <code>styles.css</code> so it stays easy to tweak.
-        </p>
-        <p>
-          It uses the system font stack so it renders instantly on any device, and it adapts
-          to your system's light or dark theme automatically.
-        </p>
-        <p>
-          This build also includes a small auth demo: a real Postgres-backed register and
-          login form, a signed session cookie, and a protected dashboard at
-          <a href="./dashboard.html">/dashboard.html</a>.
-        </p>
+        <div class="terminal" aria-hidden="false">
+          <div class="terminal-bar" aria-hidden="true">
+            <span class="terminal-dot is-red"></span>
+            <span class="terminal-dot is-yellow"></span>
+            <span class="terminal-dot is-green"></span>
+          </div>
+<pre><span class="prompt">$</span> easycoder deploy --repo test
+<span class="arrow">→</span> workspace live at https://test.app.easycoder.dev
+<span class="prompt">$</span> curl -X POST /api/register -d '{"email":"you@x"}'
+<span class="arrow">→</span> 201 {"ok":true}
+<span class="prompt">$</span> open /dashboard
+<span class="arrow">→</span> signed in · 3 notes · admin chart ready</pre>
+        </div>
       </div>
     </section>
 
     <section id="features" class="section section-alt">
       <div class="container">
-        <h2>Features</h2>
+        <p class="eyebrow">Shipped, not on a roadmap</p>
+        <h2>What works today</h2>
+        <p class="muted">Everything in this workspace is real, running code.</p>
         <ul class="feature-grid">
           <li class="feature">
-            <h3>No build tooling</h3>
-            <p>Edit the HTML and CSS, refresh the browser, ship. That's the whole loop.</p>
+            <h3>Real auth</h3>
+            <p>Postgres + bcrypt + signed cookies. No mock backend.</p>
+          </li>
+          <li class="feature">
+            <h3>Session notes</h3>
+            <p>Create, edit, delete — all persisted per account.</p>
+          </li>
+          <li class="feature">
+            <h3>Password change</h3>
+            <p>In-place, with the current password required to confirm.</p>
+          </li>
+          <li class="feature">
+            <h3>Admin overview</h3>
+            <p>The first registered user sees a registrations-over-time chart.</p>
+          </li>
+          <li class="feature">
+            <h3>Persistent storage</h3>
+            <p><code>/data</code> survives redeploys and rollbacks.</p>
+          </li>
+          <li class="feature">
+            <h3>Health probe</h3>
+            <p><code>GET /api/healthz</code> reports the live <code>dataDir</code>.</p>
           </li>
           <li class="feature">
             <h3>Responsive by default</h3>
-            <p>Layouts adapt from phone to wide desktop without media-query gymnastics.</p>
+            <p>Phone to wide desktop, no media-query gymnastics.</p>
           </li>
           <li class="feature">
-            <h3>Native fonts</h3>
-            <p>Uses the platform's UI font — no network calls, no flash of unstyled text.</p>
-          </li>
-          <li class="feature">
-            <h3>Real auth</h3>
-            <p>Backed by a real Postgres database with bcrypt password hashing and signed cookies.</p>
+            <h3>No build tooling</h3>
+            <p>Edit HTML/CSS, refresh, ship.</p>
           </li>
         </ul>
       </div>
     </section>
 
-    <section id="contact" class="section cta-banner">
-      <div class="container cta-inner">
-        <h2>Ready when you are.</h2>
-        <p>Swap the copy, tweak the palette, push to preview — and you're shipping.</p>
-        <a class="btn btn-primary" href="#top">Back to top</a>
+    <section id="how" class="section">
+      <div class="container">
+        <p class="eyebrow">Three steps</p>
+        <h2>How it works</h2>
+        <ol class="how-steps">
+          <li class="how-step">
+            <h3>Sign up</h3>
+            <p>Email + password (8+ characters). Account is created in Postgres with a bcrypt hash.</p>
+          </li>
+          <li class="how-step">
+            <h3>Add notes</h3>
+            <p>Each note you create persists to the database, scoped to your account.</p>
+          </li>
+          <li class="how-step">
+            <h3>Watch the admin chart</h3>
+            <p>The first account is admin and gets a 30-day registration chart on the dashboard.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <p class="eyebrow">Every action, on the record</p>
+        <h2>Watch, don't guess</h2>
+        <p>
+          Every note carries a timestamp. Password changes are audited server-side. The chart on
+          the dashboard is built from real registration events — not interpolated, not seeded.
+        </p>
+        <div class="terminal" aria-hidden="true">
+          <div class="terminal-bar">
+            <span class="terminal-dot is-red"></span>
+            <span class="terminal-dot is-yellow"></span>
+            <span class="terminal-dot is-green"></span>
+          </div>
+<pre><span class="prompt">$</span> POST /api/notes  body="ship the rebrand"
+<span class="arrow">→</span> 201  note_id=42  created_at=2026-10-13T14:02:11Z
+<span class="dim"># write timestamp · server clock · Postgres default</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <section id="security" class="section section-alt">
+      <div class="container">
+        <p class="eyebrow">Agents run in their own box</p>
+        <h2>Security</h2>
+        <ul class="security-grid">
+          <li class="security-pillar">
+            <h3>Bcrypt-hashed passwords</h3>
+            <p>Passwords are hashed with bcrypt at cost 10 on signup. We never see plaintext again.</p>
+          </li>
+          <li class="security-pillar">
+            <h3>Signed session cookies</h3>
+            <p>httpOnly, sameSite=lax, scoped to this workspace. Signed with a server-only secret.</p>
+          </li>
+          <li class="security-pillar">
+            <h3>Same-origin forms</h3>
+            <p>No third-party trackers, no cross-site requests, no embedded analytics.</p>
+          </li>
+          <li class="security-pillar">
+            <h3>Hardened container</h3>
+            <p>Resource caps, no Docker socket, isolated filesystem per workspace.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="faq" class="section">
+      <div class="container">
+        <p class="eyebrow">Asked and answered</p>
+        <h2>FAQ</h2>
+        <div class="faq">
+          <details>
+            <summary>Where does this app actually run?</summary>
+            <p>On EasyCoder's infra, in a per-workspace container. The repo publishes to <code>https://test.app.easycoder.dev</code>.</p>
+          </details>
+          <details>
+            <summary>Is my password stored safely?</summary>
+            <p>Yes — bcrypt-hashed at cost 10, salted per account. We never see the plaintext after signup.</p>
+          </details>
+          <details>
+            <summary>Can I delete my account?</summary>
+            <p>Not yet from the UI. The data lives in Postgres on the platform side; a self-serve flow is on the roadmap.</p>
+          </details>
+          <details>
+            <summary>Is this the EasyCoder platform itself?</summary>
+            <p>No — it's a small demo app shipped <em>from</em> an EasyCoder workspace, like every other workspace.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-band">
+      <div class="container">
+        <h2>One sign-in away.</h2>
+        <p>Create an account, write your first note, watch your first chart tick.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="./register.html">Create your account</a>
+          <a class="btn btn-ghost" href="./login.html">Sign in</a>
+        </div>
       </div>
     </section>
   </main>
 
   <footer class="site-footer">
     <div class="container footer-inner">
-      <p>&copy; <span id="year"></span> test workspace.</p>
-      <p class="muted">Built with plain HTML and CSS.</p>
+      <p>
+        <span class="brand" style="font-size:0.95rem;">EasyCoder<span class="brand-dot">.</span></span>
+        <span class="muted"> &nbsp;built with real agents, not just about them.</span>
+      </p>
+      <ul class="footer-links">
+        <li>&copy; <span id="year"></span> EasyCoder.dev</li>
+        <li><a href="mailto:hello@easycoder.dev">hello@easycoder.dev</a></li>
+      </ul>
     </div>
   </footer>
 
   <script>
     // Tiny inline enhancement: keep the copyright year current without a build step.
-    // Stays offline — no external requests, no console noise.
     (function () {
       var el = document.getElementById('year');
       if (el) el.textContent = new Date().getFullYear();
