@@ -44,11 +44,31 @@ this workspace without any extra files:
 | `COOKIE_SECRET`| Secret used to sign the session cookie.          |
 | `PORT`         | Port to listen on (default `3000`).              |
 | `NODE_ENV`     | Set to `production` to mark the cookie `secure`. |
+| `APP_DATA_DIR` | Directory for local runtime state (default `/data` in production, `.data/` locally). |
 
 To use your own database locally without touching the committed fallback,
 copy `.env.example` (or just create `.env`) and export the values before
 running `npm start`. The committed dev values stay in `config.js` for the
 EasyCoder workspace; they are not loaded from `.env` automatically.
+
+## Runtime state
+
+The only durable store today is the external managed Postgres
+`test-auth-db` — there are no local SQLite files, uploads, or writeable
+data files in the repo. `config.js` exposes `config.dataDir` (from
+`APP_DATA_DIR`, default `/data` in the published container, `.data/`
+locally) and creates it on boot so future features have a landing spot
+that survives redeploys and restarts.
+
+A few rules for whoever fills that in:
+
+- Do **not** write secrets into `/data` — the file system is shared
+  infrastructure, not redacted configs and env vars.
+- The whole folder is wiped between redeploys unless the app was
+  published with `persist: true`. Confirm `GET /v1/apps/<slug>` returns
+  `dataPersistent: true` before relying on it across deploys.
+- The default `/data` quota is 1 GB shared across the org; over-quota
+  writes fail with `EACCES`. Watch `dataBytes` on `/v1/apps/<slug>`.
 
 ## API
 

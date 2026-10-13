@@ -5,6 +5,7 @@
 
 'use strict';
 
+const fs = require('fs');
 const path = require('path');
 
 // Hardcoded dev fallback so this repo boots in the dev workspace without an
@@ -15,6 +16,14 @@ const DEV_DATABASE_URL =
 // Cookie signing secret. Always override in production.
 const DEV_COOKIE_SECRET = 'dev-only-not-secret-change-me';
 
+// Local directory for runtime state that does NOT belong in the repo. In the
+// published container this resolves to /data via APP_DATA_DIR; locally it
+// falls back to a hidden folder beside this file. The current build has no
+// local state to write (the only DB is the external test-auth-db), so this is
+// reserved for future use.
+const dataDir = process.env.APP_DATA_DIR || path.join(__dirname, '.data');
+fs.mkdirSync(dataDir, { recursive: true });
+
 const config = {
   port: Number(process.env.PORT) || 3000,
   nodeEnv: process.env.NODE_ENV || 'development',
@@ -24,6 +33,7 @@ const config = {
   // requiring measurable work; bump if a security review asks for it.
   bcryptRounds: 10,
   publicDir: path.join(__dirname, 'public'),
+  dataDir,
 };
 
 module.exports = config;
