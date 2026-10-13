@@ -24,6 +24,17 @@ const DEV_COOKIE_SECRET = 'dev-only-not-secret-change-me';
 const dataDir = process.env.APP_DATA_DIR || path.join(__dirname, '.data');
 fs.mkdirSync(dataDir, { recursive: true });
 
+// Admin allowlist. Comma-separated emails, lowercased + trimmed. On every
+// successful login and register, users whose email is in this set get
+// promoted to is_admin = TRUE. Update via the EasyCoder app config (or
+// directly in the DB) without redeploying code.
+const adminEmails = new Set(
+  String(process.env.ADMIN_EMAILS || '')
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean)
+);
+
 const config = {
   port: Number(process.env.PORT) || 3000,
   nodeEnv: process.env.NODE_ENV || 'development',
@@ -34,6 +45,7 @@ const config = {
   bcryptRounds: 10,
   publicDir: path.join(__dirname, 'public'),
   dataDir,
+  adminEmails,
 };
 
 module.exports = config;
