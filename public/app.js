@@ -384,6 +384,21 @@
     }
   }
 
+  function wireVerifyFlash() {
+    // /dashboard.html?verified=ok is set by verify.html after a successful
+    // confirmation. The verify-banner hides itself because email_verified is
+    // now true, so we surface a one-time success line in #profile-message
+    // (the form-message slot the dashboard already uses).
+    var msg = $('profile-message');
+    if (!msg) return;
+    if (paramFromUrl('verified') !== 'ok') return;
+    setMessage(msg, 'Email verified.', 'success');
+    try {
+      var cleanUrl = window.location.pathname + window.location.hash;
+      window.history.replaceState(null, '', cleanUrl);
+    } catch (e) { /* ignore */ }
+  }
+
   // ---------- Verify banner + security panel ----------
 
   function renderVerifyBanner(user) {
@@ -1091,6 +1106,7 @@
       root.innerHTML = '';
       root.appendChild(renderProfile(user));
       wireProfile(root, user);
+      wireVerifyFlash();
       root.appendChild(renderNotesSection(notes));
       wireNotes(root);
       root.appendChild(renderSecuritySection(events));

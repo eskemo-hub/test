@@ -187,12 +187,14 @@ app.post('/api/register', async (req, res) => {
     const verifyToken = generateToken();
     const verifyTokenHash = hashToken(verifyToken);
     const verifyLink = `/verify.html?token=${verifyToken}`;
+    let verifyInserted = false;
     try {
       await pool.query(
         `INSERT INTO email_verification_tokens (user_id, token_hash, expires_at)
          VALUES ($1, $2, now() + interval '24 hours')`,
         [user.id, verifyTokenHash]
       );
+      verifyInserted = true;
       if (config.nodeEnv === 'production') {
         console.log(`[email/verify] link for ${user.email}: ${verifyLink}`);
       }
@@ -203,7 +205,7 @@ app.post('/api/register', async (req, res) => {
     }
 
     const payload = { id: user.id, email: user.email, is_admin: user.is_admin };
-    if (config.nodeEnv !== 'production') {
+    if (verifyInserted && config.nodeEnv !== 'production') {
       payload.verifyLink = verifyLink;
     }
     return res.status(200).json(payload);
