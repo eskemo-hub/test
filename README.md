@@ -112,13 +112,18 @@ or when a session is suspected to be compromised.
 
 | Method | Path                          | Body                                  | Success                                                     |
 | ------ | ----------------------------- | ------------------------------------- | ----------------------------------------------------------- |
-| POST   | `/api/register`               | `{ email, password }`                 | `200 { id, email, is_admin }` (sets cookie)                 |
+| POST   | `/api/register`               | `{ email, password }`                 | `200 { id, email, is_admin, verifyLink? }` (sets cookie)    |
 | POST   | `/api/login`                  | `{ email, password }`                 | `200 { id, email, is_admin }` (sets cookie)                 |
 | POST   | `/api/logout`                 | —                                     | `204` (clears cookie)                                       |
-| GET    | `/api/me`                     | —                                     | `200 { id, email, is_admin, created_at, last_sign_in_at }`  |
+| GET    | `/api/me`                     | —                                     | `200 { id, email, is_admin, created_at, last_sign_in_at, email_verified, email_verified_at }` |
 | GET    | `/api/healthz`                | —                                     | `200 { ok: true, dataDir }` (liveness + persistence probe)  |
 | POST   | `/api/change-password`        | `{ currentPassword, newPassword }`    | `200 { ok: true }` (cookie stays; user must sign in again on other devices) |
 | POST   | `/api/sign-out-everywhere`    | —                                     | `204` (clears cookie; bumps `session_epoch`)                |
+| POST   | `/api/password/reset/request` | `{ email }`                           | `200 { ok: true, link? }` — link is dev-only                |
+| POST   | `/api/password/reset/confirm` | `{ token, newPassword }`              | `200 { ok: true }` (bumps `session_epoch`; clears cookie)    |
+| POST   | `/api/email/verify/request`   | —                                     | `200 { ok: true, link? }` — link is dev-only; 429 if a token was issued for this user in the last 60 s |
+| POST   | `/api/email/verify/confirm`   | `{ token }`                           | `200 { ok: true }` or `400` if expired / used               |
+| GET    | `/api/security/events`        | —                                     | `200 { events: [{ id, type, ip, user_agent, created_at }] }` (last 50 for the caller) |
 | GET    | `/api/notes`                  | —                                     | `200 { notes: [{ id, body, created_at, updated_at }] }`     |
 | POST   | `/api/notes`                  | `{ body }`                            | `200 { id, body, created_at, updated_at }`                  |
 | PATCH  | `/api/notes/:id`              | `{ body }`                            | `200 { id, body, created_at, updated_at }` or `404`         |
@@ -148,6 +153,39 @@ or when a session is suspected to be compromised.
   the caller does not own.
 - `admin/stats` requires `is_admin = TRUE`. Returns 14 days of data,
   oldest first, with zero-filled days (via `generate_series`).
+
+## Account recovery & security
+
+Three small features on top of the auth surface, all additive — the cookie
+format, `/api/me` shape, and the existing routes are unchanged.
+
+- **Password reset.** Forgot-password → `/forgot.html` posts the email to
+  `POST /api/password/reset/request`. The response is always `{ok: true}`
+  (same shape for unknown emails) so the endpoint cannot be used to
+  enumerate accounts. In dev the link is also returned in JSON
+  (`link: "/reset.html?token=…"`); in production it is logged to stdout
+  so an SMTP layer can pick it up later. `/reset.html` reads `?token=`
+  and posts the new password to `POST /api/password/reset/confirm`,
+  which deletes the token row, hashes the new password, and bumps
+  `session_epoch` so any active cookie dies. Tokens are 32 random bytes
+  hex-encoded; we store only `SHA-256(token)` in `password_reset_tokens`
+  and TTL them at 1 hour.
+- **Email verification.** New accounts default to `users.email_verified =
+  FALSE`. The registration response includes a `verifyLink` (dev only) or
+  the link is logged (prod). `/verify.html` reads `?token=` and posts to
+  `POST /api/email/verify/confirm`; on success `users.email_verified` is
+  flipped to `TRUE` and `email_verified_at` is set. Tokens are 24 h, single
+  use (`used_at IS NULL` filter), and `POST /api/email/verify/request`
+  rate-limits to one fresh link per 60 s per user.
+- **Security / audit log.** Every state-changing auth action inserts a row
+  into `security_events` with the user id (nullable for `login_failed`
+  against an unknown email), event type, IP, and user-agent. Types:
+  `register`, `login`, `login_failed`, `logout`, `sign_out_everywhere`,
+  `change_password`, `password_reset_request`, `password_reset_confirm`,
+  `email_verify_request`, `email_verify_confirm`. `GET /api/security/events`
+  returns the last 50 rows for the caller, newest first. The dashboard
+  renders them in a dedicated "Security" panel; audit logging never
+  breaks a user flow (a failed INSERT is logged and swallowed).
 
 ## Publishing
 

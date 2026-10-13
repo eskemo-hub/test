@@ -27,6 +27,13 @@
 
   <main id="main" class="dashboard-main">
     <div class="container">
+      <div id="verify-banner" class="verify-banner" hidden role="status" aria-live="polite">
+        <div class="verify-banner-text">
+          <p class="verify-banner-msg">Verify your email to unlock all features.</p>
+          <p class="verify-banner-link muted" id="verify-banner-link" hidden></p>
+        </div>
+        <button type="button" class="btn btn-ghost" id="verify-banner-btn">Resend verification email</button>
+      </div>
       <div id="dashboard-root" class="dashboard-grid">
         <p class="dashboard-loading">Loading your dashboard&hellip;</p>
       </div>

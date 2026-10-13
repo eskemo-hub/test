@@ -228,6 +228,261 @@
     }
   }
 
+  // ---------- Forgot / reset / verify pages ----------
+
+  function paramFromUrl(name) {
+    var qs = window.location.search.replace(/^\?/, '');
+    if (!qs) return '';
+    var parts = qs.split('&');
+    for (var i = 0; i < parts.length; i++) {
+      var kv = parts[i].split('=');
+      if (decodeURIComponent(kv[0]) === name) {
+        return decodeURIComponent((kv[1] || '').replace(/\+/g, '%20'));
+      }
+    }
+    return '';
+  }
+
+  function wireForgotForm() {
+    var form = $('forgot-form');
+    if (!form) return;
+    var msg = $('form-message');
+    var btn = $('submit-btn');
+
+    form.addEventListener('submit', async function (ev) {
+      ev.preventDefault();
+      setMessage(msg, '', null);
+      btn.disabled = true;
+      try {
+        var out = await postJSON('/api/password/reset/request', {
+          email: form.email.value.trim(),
+        });
+        // Always succeed from the user's perspective — same response whether
+        // the email is registered or not.
+        if (out.status === 200) {
+          var text = "If an account exists for that email, we've sent a reset link.";
+          var link = out.data && out.data.link;
+          if (link) {
+            // Dev mode: surface the link so the demo flow is testable
+            // without an SMTP relay.
+            text += ' Dev link: ' + link;
+          }
+          setMessage(msg, text, 'success');
+          form.reset();
+        } else {
+          setMessage(msg, (out.data && out.data.error) || 'Could not request reset.', 'error');
+        }
+      } catch (err) {
+        setMessage(msg, 'Network error — please try again.', 'error');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  }
+
+  function wireResetForm() {
+    var form = $('reset-form');
+    if (!form) return;
+    var msg = $('form-message');
+    var btn = $('submit-btn');
+    var errBlock = $('reset-error');
+
+    var token = paramFromUrl('token');
+    if (!token) {
+      // No token in the URL — show the "request a new link" path instead of
+      // letting the user fill in a form that will 400 anyway.
+      if (form) form.setAttribute('hidden', '');
+      if (errBlock) errBlock.removeAttribute('hidden');
+      var errMsg = $('reset-error-msg');
+      if (errMsg) errMsg.textContent = 'This reset link is invalid or has expired.';
+      return;
+    }
+
+    form.addEventListener('submit', async function (ev) {
+      ev.preventDefault();
+      setMessage(msg, '', null);
+      var newPwd = form.newPassword.value;
+      var confirm = form.confirmPassword.value;
+      if (newPwd.length < 8) {
+        setMessage(msg, 'New password must be at least 8 characters.', 'error');
+        return;
+      }
+      if (newPwd !== confirm) {
+        setMessage(msg, 'New password and confirmation do not match.', 'error');
+        return;
+      }
+      btn.disabled = true;
+      try {
+        var out = await postJSON('/api/password/reset/confirm', {
+          token: token,
+          newPassword: newPwd,
+        });
+        if (out.status === 200) {
+          // Drop any cached state; the new password invalidates old sessions.
+          try { window.localStorage.clear(); } catch (e) { /* ignore */ }
+          window.location.href = './login.html?reset=ok';
+          return;
+        }
+        setMessage(msg, (out.data && out.data.error) || 'Could not update password.', 'error');
+        btn.disabled = false;
+      } catch (err) {
+        setMessage(msg, 'Network error — please try again.', 'error');
+        btn.disabled = false;
+      }
+    });
+  }
+
+  function wireVerifyPage() {
+    var title = $('title');
+    var sub = $('sub');
+    var foot = $('auth-foot');
+    var msg = $('form-message');
+    if (!title || !sub) return;
+
+    var token = paramFromUrl('token');
+    if (!token) {
+      title.textContent = 'Verification link';
+      sub.textContent = 'This link is missing a token. Request a new one from your dashboard.';
+      if (foot) foot.removeAttribute('hidden');
+      return;
+    }
+
+    setMessage(msg, 'Verifying…', null);
+    postJSON('/api/email/verify/confirm', { token: token }).then(function (out) {
+      if (out.status === 200) {
+        title.textContent = 'Email verified';
+        sub.textContent = 'Your email is now verified. Redirecting to your dashboard…';
+        setMessage(msg, '', null);
+        if (foot) foot.removeAttribute('hidden');
+        // Redirect with a flash flag the dashboard can pick up.
+        setTimeout(function () {
+          window.location.href = './dashboard.html?verified=ok';
+        }, 600);
+      } else {
+        title.textContent = 'Verification failed';
+        sub.textContent = 'This link has expired or was already used. You can resend a new one from your dashboard.';
+        setMessage(msg, (out.data && out.data.error) || 'Verification failed.', 'error');
+        if (foot) foot.removeAttribute('hidden');
+      }
+    }).catch(function () {
+      title.textContent = 'Verification failed';
+      sub.textContent = 'Network error. Please try again from your dashboard.';
+      setMessage(msg, 'Network error — please try again.', 'error');
+      if (foot) foot.removeAttribute('hidden');
+    });
+  }
+
+  function wireLoginFlash() {
+    // /login.html?reset=ok is set by reset.html after a successful change.
+    // Surface a one-time success line above the form.
+    var form = $('login-form');
+    if (!form) return;
+    if (paramFromUrl('reset') !== 'ok') return;
+    var msg = $('form-message');
+    if (msg) {
+      setMessage(msg, 'Password updated. Please sign in with your new password.', 'success');
+    }
+  }
+
+  // ---------- Verify banner + security panel ----------
+
+  function renderVerifyBanner(user) {
+    var banner = $('verify-banner');
+    if (!banner) return;
+    if (user && user.email_verified === false) {
+      banner.removeAttribute('hidden');
+      wireVerifyBanner();
+    } else {
+      banner.setAttribute('hidden', '');
+    }
+  }
+
+  function wireVerifyBanner() {
+    var btn = $('verify-banner-btn');
+    if (!btn) return;
+    btn.addEventListener('click', async function () {
+      btn.disabled = true;
+      try {
+        var out = await postJSON('/api/email/verify/request', {});
+        if (maybeRedirectOn401(out.status)) return;
+        if (out.status === 200) {
+          var link = out.data && out.data.link;
+          var linkEl = $('verify-banner-link');
+          if (link && linkEl) {
+            linkEl.innerHTML = '';
+            linkEl.appendChild(document.createTextNode('Dev link: '));
+            var a = document.createElement('a');
+            a.href = link;
+            a.textContent = link;
+            a.target = '_blank';
+            a.rel = 'noopener';
+            linkEl.appendChild(a);
+            linkEl.removeAttribute('hidden');
+          }
+        } else if (out.status === 429) {
+          // Quiet — the user can try again in a minute.
+        }
+      } catch (e) {
+        // Banner is informational; do not flash an error here.
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  }
+
+  // Human-readable label for a security event type. Falls back to the raw
+  // snake_case token when a type slips in that we haven't named yet.
+  function eventTypeLabel(type) {
+    var map = {
+      register: 'Account created',
+      login: 'Signed in',
+      login_failed: 'Sign-in failed',
+      logout: 'Signed out',
+      sign_out_everywhere: 'Signed out everywhere',
+      change_password: 'Password changed',
+      password_reset_request: 'Password reset requested',
+      password_reset_confirm: 'Password reset confirmed',
+      email_verify_request: 'Verification email requested',
+      email_verify_confirm: 'Email verified',
+    };
+    return map[type] || type;
+  }
+
+  function renderSecuritySection(events) {
+    var wrap = el('section', { class: 'security-section' });
+    wrap.appendChild(el('p', { class: 'panel-eyebrow', text: 'Account' }));
+    wrap.appendChild(el('h2', { class: 'section-heading', text: 'Security' }));
+
+    var list = el('div', { class: 'events-list', id: 'events-list' });
+    if (!events || events.length === 0) {
+      list.appendChild(el('p', { class: 'events-empty muted', text: 'No security events yet.' }));
+    } else {
+      events.forEach(function (ev) {
+        var row = el('article', { class: 'event-row' });
+        var left = el('div', { class: 'event-row-left' }, [
+          el('p', { class: 'event-row-type', text: eventTypeLabel(ev.type) }),
+          el('p', { class: 'event-row-meta muted' }, [
+            document.createTextNode(formatRelative(ev.created_at) + ' '),
+            el('time', {
+              datetime: ev.created_at,
+              title: absoluteForTime(ev.created_at),
+              text: '(' + absoluteForTime(ev.created_at) + ')',
+            }),
+          ]),
+        ]);
+        var right = el('div', { class: 'event-row-meta muted' });
+        if (ev.ip) right.appendChild(document.createTextNode(ev.ip));
+        if (ev.ip && ev.user_agent) right.appendChild(document.createTextNode(' · '));
+        if (ev.user_agent) right.appendChild(document.createTextNode(ev.user_agent));
+        row.appendChild(left);
+        row.appendChild(right);
+        list.appendChild(row);
+      });
+    }
+    wrap.appendChild(list);
+    return wrap;
+  }
+
   // ---------- Dashboard render ----------
 
   function el(tag, attrs, children) {
@@ -802,6 +1057,19 @@
       if (maybeRedirectOn401(notesRes.status)) return;
       var notes = (notesRes.data && notesRes.data.notes) || [];
 
+      // Security events are best-effort: a 5xx is non-fatal and we render
+      // the section with an empty list. /api/security/events requires auth
+      // so a 401 here would have already redirected above.
+      var events = [];
+      try {
+        var evRes = await getJSON('/api/security/events');
+        if (evRes.status === 200) {
+          events = (evRes.data && evRes.data.events) || [];
+        }
+      } catch (e) {
+        // Swallow — Security section is still rendered, just empty.
+      }
+
       // Admin stats is best-effort. 403 → not an admin, render without the
       // admin section. Any other error is also non-fatal.
       var stats = null;
@@ -819,11 +1087,13 @@
         }
       }
 
+      renderVerifyBanner(user);
       root.innerHTML = '';
       root.appendChild(renderProfile(user));
       wireProfile(root, user);
       root.appendChild(renderNotesSection(notes));
       wireNotes(root);
+      root.appendChild(renderSecuritySection(events));
       if (stats) {
         root.appendChild(renderAdminSection(stats));
       }
@@ -836,7 +1106,11 @@
   document.addEventListener('DOMContentLoaded', function () {
     refreshAuthNav();
     wireLoginForm();
+    wireLoginFlash();
     wireRegisterForm();
+    wireForgotForm();
+    wireResetForm();
+    wireVerifyPage();
     wireSignOutButtons();
     loadDashboard();
   });

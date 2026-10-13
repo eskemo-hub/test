@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Reset password — EasyCoder</title>
+  <meta name="color-scheme" content="light dark" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="./index.html" aria-label="EasyCoder — home">EasyCoder<span class="brand-dot" aria-hidden="true">.</span></a>
+      <nav class="site-nav" aria-label="Primary">
+        <ul>
+          <li><a href="./index.html">Home</a></li>
+          <li><a href="./login.html">Sign in</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="auth-main">
+    <section class="auth-card">
+      <h1 class="auth-title">Set a new password</h1>
+      <p class="auth-sub" id="auth-sub">Pick a new password (8+ characters).</p>
+
+      <form class="auth-form" id="reset-form" novalidate hidden>
+        <div class="field">
+          <label for="newPassword">New password</label>
+          <input id="newPassword" name="newPassword" type="password" autocomplete="new-password" required minlength="8" />
+          <p class="field-hint">At least 8 characters.</p>
+        </div>
+        <div class="field">
+          <label for="confirmPassword">Confirm new password</label>
+          <input id="confirmPassword" name="confirmPassword" type="password" autocomplete="new-password" required minlength="8" />
+        </div>
+
+        <p class="form-message" id="form-message" role="status" aria-live="polite"></p>
+
+        <button type="submit" class="btn btn-primary btn-block" id="submit-btn">Update password</button>
+      </form>
+
+      <div id="reset-error" hidden>
+        <p class="form-message is-error" id="reset-error-msg">This reset link is invalid or has expired.</p>
+        <p class="auth-foot">
+          <a href="./forgot.html">Request a new link</a>
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>&copy; <span id="year"></span> EasyCoder.dev</p>
+      <p class="muted">A small demo app shipped from an EasyCoder workspace.</p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var el = document.getElementById('year');
+      if (el) el.textContent = new Date().getFullYear();
+    })();
+  </script>
+  <script src="./app.js"></script>
+</body>
+</html>

@@ -574,6 +574,10 @@ code {
   }
   .admin-section {
     grid-column: 1 / -1;
+    grid-row: 3;
+  }
+  .security-section {
+    grid-column: 1 / -1;
     grid-row: 2;
   }
 }
@@ -595,6 +599,51 @@ code {
   border-radius: 14px;
   padding: clamp(1.25rem, 3vw, 1.75rem);
   box-shadow: 0 1px 2px color-mix(in srgb, var(--text) 6%, transparent);
+}
+
+.security-section {
+  /* Lighter card — the audit feed is denser than Notes/Admin, so it reads
+     better as a flat slab than a shadowed card. Same border + radius as
+     .note-card for visual rhythm. */
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+}
+
+.verify-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 0 0 1.25rem;
+  padding: 0.9rem 1.1rem;
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+  border-radius: 12px;
+  transition: opacity 0.15s ease;
+}
+
+.verify-banner-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.verify-banner-msg {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.verify-banner-link {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+  word-break: break-all;
+}
+
+.verify-banner[hidden] {
+  display: none;
 }
 
 .profile-top {
@@ -816,6 +865,62 @@ code {
 
 .note-edit-message {
   margin: 0.5rem 0 0;
+}
+
+/* ---------- Security section (audit log) ---------- */
+
+.events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.events-empty {
+  margin: 0;
+  padding: 1rem;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  text-align: center;
+}
+
+.event-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.65rem 0.9rem;
+  transition: border-color 0.15s ease;
+}
+
+.event-row:hover {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+}
+
+.event-row-left {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.event-row-type {
+  margin: 0 0 0.15rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.event-row-meta {
+  margin: 0;
+  font-size: 0.85rem;
+  word-break: break-all;
+}
+
+.event-row-meta time {
+  margin-left: 0.15rem;
 }
 
 /* ---------- Admin section + charts ---------- */
@@ -1247,7 +1352,9 @@ code {
   .note-card,
   .note-action,
   .note-input,
-  .note-edit-input {
+  .note-edit-input,
+  .verify-banner,
+  .event-row {
     transition: none;
   }
 }
