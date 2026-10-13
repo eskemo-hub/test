@@ -320,6 +320,7 @@
 
   function renderNotesSection(initialNotes) {
     var wrap = el('section', { class: 'notes-section' });
+    wrap.appendChild(el('p', { class: 'panel-eyebrow', text: 'Personal' }));
     wrap.appendChild(el('h2', { class: 'section-heading', text: 'Notes' }));
 
     var createMsg = el('p', { class: 'form-message', id: 'note-create-message' });
@@ -431,7 +432,8 @@
 
   function renderAdminSection(stats) {
     var wrap = el('section', { class: 'admin-section' });
-    wrap.appendChild(el('h2', { class: 'section-heading', text: 'Admin · Stats' }));
+    wrap.appendChild(el('p', { class: 'panel-eyebrow', text: 'Workspace' }));
+    wrap.appendChild(el('h2', { class: 'section-heading', text: 'Stats' }));
 
     var signupsWeek = stats.signupsByDay.slice(-7).reduce(function (s, d) { return s + d.count; }, 0);
     var notesWeek = stats.notesByDay.slice(-7).reduce(function (s, d) { return s + d.count; }, 0);

@@ -248,6 +248,17 @@ code {
   border-radius: 999px;
 }
 
+/* Panel eyebrow — sibling of `.eyebrow` (landing hero). No pill background;
+   sits flush above a `.section-heading` inside a dashboard panel. */
+.panel-eyebrow {
+  margin: 0 0 0.45rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
 .hero-title {
   font-size: clamp(2rem, 5vw, 3.25rem);
   margin-bottom: 1rem;
@@ -684,8 +695,9 @@ code {
 /* ---------- Notes section ---------- */
 
 .section-heading {
-  font-size: 1.15rem;
-  margin: 0 0 1rem;
+  font-size: 1.25rem;
+  letter-spacing: -0.01em;
+  margin: 0 0 1.1rem;
 }
 
 .note-create {
@@ -735,6 +747,12 @@ code {
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 0.9rem 1rem;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.note-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
 }
 
 .note-card.is-editing {
@@ -804,6 +822,9 @@ code {
 
 .admin-section {
   padding-top: clamp(1.5rem, 3vw, 2rem);
+  border-color: color-mix(in srgb, var(--accent) 25%, var(--border));
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--text) 6%, transparent),
+    0 8px 24px -16px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 .stat-tile-row {
@@ -823,7 +844,8 @@ code {
 .stat-tile-label {
   margin: 0 0 0.3rem;
   font-size: 0.8rem;
-  color: var(--text-muted);
+  font-weight: 600;
+  color: var(--accent);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -1222,6 +1244,7 @@ code {
 
   .btn,
   .feature,
+  .note-card,
   .note-action,
   .note-input,
   .note-edit-input {
