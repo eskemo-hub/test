@@ -214,6 +214,13 @@ app.get('/api/me', requireAuth, (req, res) => {
   });
 });
 
+// Liveness check that also surfaces the resolved local-state directory. Cheap
+// to hit and useful for confirming the published container sees `/data` after
+// a publish — no auth, no DB call.
+app.get('/api/healthz', (req, res) => {
+  res.json({ ok: true, dataDir: config.dataDir });
+});
+
 // ---------- Account: change password ----------
 
 app.post('/api/change-password', requireAuth, async (req, res) => {

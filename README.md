@@ -52,14 +52,15 @@ copy `.env.example` (or just create `.env`) and export the values before
 running `npm start`. The committed dev values stay in `config.js` for the
 EasyCoder workspace; they are not loaded from `.env` automatically.
 
-## Runtime state
+## Persistence
 
-The only durable store today is the external managed Postgres
-`test-auth-db` — there are no local SQLite files, uploads, or writeable
-data files in the repo. `config.js` exposes `config.dataDir` (from
-`APP_DATA_DIR`, default `/data` in the published container, `.data/`
-locally) and creates it on boot so future features have a landing spot
-that survives redeploys and restarts.
+`/data` survives redeploys, restarts, and rollbacks (the app is published
+with `persist: true`). The only stateful DB today is the external managed
+Postgres `test-auth-db`; nothing else in the app writes to disk. `config.js`
+exposes `config.dataDir` (from `APP_DATA_DIR`, default `/data` in the
+published container, `.data/` locally) and creates it on boot, so any
+future local files — uploads, caches, an on-disk store — should live
+under `config.dataDir` to inherit persistence for free.
 
 A few rules for whoever fills that in:
 
@@ -113,6 +114,7 @@ or when a session is suspected to be compromised.
 | POST   | `/api/login`                  | `{ email, password }`                 | `200 { id, email, is_admin }` (sets cookie)                 |
 | POST   | `/api/logout`                 | —                                     | `204` (clears cookie)                                       |
 | GET    | `/api/me`                     | —                                     | `200 { id, email, is_admin, created_at, last_sign_in_at }`  |
+| GET    | `/api/healthz`                | —                                     | `200 { ok: true, dataDir }` (liveness + persistence probe)  |
 | POST   | `/api/change-password`        | `{ currentPassword, newPassword }`    | `200 { ok: true }` (cookie stays; user must sign in again on other devices) |
 | POST   | `/api/sign-out-everywhere`    | —                                     | `204` (clears cookie; bumps `session_epoch`)                |
 | GET    | `/api/notes`                  | —                                     | `200 { notes: [{ id, body, created_at, updated_at }] }`     |
@@ -123,6 +125,10 @@ or when a session is suspected to be compromised.
 
 ### Endpoint notes
 
+- `healthz` is unauthenticated and returns the resolved `config.dataDir`. Use
+  it to confirm the published container sees `/data` after a publish:
+  `curl https://test.app.easycoder.dev/api/healthz` →
+  `{"ok":true,"dataDir":"/data"}`.
 - `register` validates email shape and `password.length >= 8`, lowercases the
   email, bcrypt-hashes (cost 10), and inserts. Returns `409` on duplicate
   email.
