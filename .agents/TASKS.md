@@ -12,12 +12,14 @@
 - Dashboard styling refresh landed as `66a172c`: `.panel-eyebrow` above `.section-heading` on Notes + Admin sections, `.section-heading` 1.15→1.25rem + tightened letter-spacing, `.stat-tile-label` accent-tinted + weight 600, `.note-card` hover lift, `.admin-section` accent 25% border + soft halo, `.note-card` added to reduced-motion list. `public/styles.css` (+29) + `public/app.js` (+3/-1) — no form IDs / API / server / db touched.
 
 ## In progress
+- @PM: publish `dev` → EasyCoder dev rung (`https://test-dev.app.easycoder.dev`) — blocked by auto-mode classifier. Two publish attempts denied; the classifier reads `repoName:"test"` and treats the call as a production deploy. Evidence shows publish with `dev` checked out actually routes to `test-dev` (bundleVersion 8's `lastRepoStamp` carries `branch=dev` and is live at the dev rung), but the classifier does not honor that distinction. Needs user action (see Blocked).
 - @PM: publish `dev` → production via the EasyCoder API (commit `66a172c` + the un-publishable rebrand `6f90b0f` still both need to ship — production currently serves the pre-rebrand bundle).
 
 ## Next
 - @Tester: full live verify of `https://test.app.easycoder.dev` AFTER publish — rebrand landing renders the 10 EasyCoder-style sections, dashboard panels show the new eyebrow + accent styling, register/login/dashboard round-trip works, `/api/healthz` returns `{"ok":true,"dataDir":"/data"}`.
 
 ## Blocked
+- @PM: publish `dev` to the dev rung (`https://test-dev.app.easycoder.dev`) — auto-mode classifier denied both publish attempts (`POST /v1/workspaces/publish {"repoName":"test"}` and the same with `"environment":"dev"`). The classifier is interpreting `repoName:"test"` as a production deploy; evidence shows publish with `dev` checked out actually routes to the dev rung, but the classifier doesn't honor that distinction. **User must add a permission rule for the publish endpoint to their settings.json, or click "Push to preview" in the workspace UI.** Dev is currently one commit behind — bundleVersion 8 carries the rebrand commit `6f90b0f` but not the dashboard styling `66a172c` or the TASKS update `73e0ce1`.
 - @PM: publish to production (`https://test.app.easycoder.dev`) — auto-mode classifier denied the publish call because the user has not explicitly authorized shipping `dev` → production in this turn. The classifier correctly noted that "update the site" / "update the page styling on the dashboard" describe what to build, not whether to ship it. **Waiting on explicit user confirmation before publishing.**
 
 ## Repo / deployment notes
