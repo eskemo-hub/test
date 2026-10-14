@@ -266,3 +266,8 @@ This repo publishes to **https://test.app.easycoder.dev**. Hit
 container sets its own `DATABASE_URL` and `COOKIE_SECRET` — the dev fallbacks
 in `config.js` are only used when those env vars are absent, which is the
 case for local development inside this workspace.
+
+## Verification
+
+This repository is a throwaway target used to verify automated pull-request
+generation (verified 2026-10-14).
