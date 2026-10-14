@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Post — EasyCoder</title>
+  <meta name="color-scheme" content="light dark" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="./index.html" aria-label="EasyCoder — home">EasyCoder<span class="brand-dot" aria-hidden="true">.</span></a>
+      <nav class="site-nav" aria-label="Primary">
+        <ul>
+          <li><a href="./index.html">Home</a></li>
+          <li><a href="./blog.html">Blog</a></li>
+          <li><a href="./pricing.html">Pricing</a></li>
+          <li class="nav-auth" data-auth="signed-out"><a href="./login.html">Sign in</a></li>
+          <li class="nav-auth" data-auth="signed-in" hidden><a href="./dashboard.html">Dashboard</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="post-main">
+    <article class="container" id="post-root">
+      <p class="posts-loading muted">Loading post…</p>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>
+        <span class="brand" style="font-size:0.95rem;">EasyCoder<span class="brand-dot">.</span></span>
+        <span class="muted"> &nbsp;a small demo blog.</span>
+      </p>
+      <ul class="footer-links">
+        <li>&copy; <span id="year"></span> EasyCoder.dev</li>
+        <li><a href="./blog.html">All posts</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var el = document.getElementById('year');
+      if (el) el.textContent = new Date().getFullYear();
+    })();
+  </script>
+  <script src="./app.js"></script>
+  <script>
+    (function () {
+      var root = document.getElementById('post-root');
+      if (!root) return;
+
+      function qp(name) {
+        var qs = window.location.search.replace(/^\?/, '');
+        if (!qs) return '';
+        var parts = qs.split('&');
+        for (var i = 0; i < parts.length; i++) {
+          var kv = parts[i].split('=');
+          if (decodeURIComponent(kv[0]) === name) {
+            return decodeURIComponent((kv[1] || '').replace(/\+/g, '%20'));
+          }
+        }
+        return '';
+      }
+
+      function el(tag, attrs, children) {
+        var n = document.createElement(tag);
+        if (attrs) for (var k in attrs) {
+          if (k === 'class') n.className = attrs[k];
+          else if (k === 'text') n.textContent = attrs[k];
+          else if (k === 'html') n.innerHTML = attrs[k];
+          else n.setAttribute(k, attrs[k]);
+        }
+        (children || []).forEach(function (c) {
+          if (c == null) return;
+          if (typeof c === 'string') n.appendChild(document.createTextNode(c));
+          else n.appendChild(c);
+        });
+        return n;
+      }
+
+      function formatDate(iso) {
+        if (!iso) return '';
+        var d = new Date(iso);
+        if (isNaN(d.getTime())) return '';
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      }
+
+      var slug = qp('slug');
+      if (!slug) {
+        root.innerHTML = '';
+        root.appendChild(el('p', { class: 'form-message is-error', text: 'Missing slug. Pick a post from the blog.' }));
+        return;
+      }
+
+      fetch('/api/posts/' + encodeURIComponent(slug), { credentials: 'same-origin' })
+        .then(function (r) {
+          if (r.status === 404) {
+            root.innerHTML = '';
+            root.appendChild(el('p', { class: 'form-message is-error', text: 'Post not found.' }));
+            return null;
+          }
+          return r.json();
+        })
+        .then(function (data) {
+          if (!data) return;
+          root.innerHTML = '';
+          var wrap = el('article', { class: 'post-article' });
+
+          var eyebrow = el('p', { class: 'eyebrow', text: data.tier === 'paid' ? 'Pro post' : 'Free post' });
+          wrap.appendChild(eyebrow);
+          wrap.appendChild(el('h1', { class: 'post-title', text: data.title }));
+          if (data.published_at) {
+            wrap.appendChild(el('p', { class: 'post-meta muted', text: 'Published ' + formatDate(data.published_at) }));
+          }
+
+          if (data.locked) {
+            var paywall = el('section', { class: 'paywall' });
+            paywall.appendChild(el('p', { class: 'paywall-message', text: 'This is a Pro post. Subscribe to read the rest.' }));
+            paywall.appendChild(el('p', { class: 'paywall-excerpt muted', text: data.excerpt }));
+            paywall.appendChild(el('a', { class: 'btn btn-primary', href: './pricing.html', text: 'Get Pro' }));
+            var signIn = el('p', { class: 'paywall-signin muted' });
+            signIn.appendChild(document.createTextNode('Already subscribed? '));
+            signIn.appendChild(el('a', { href: './login.html', text: 'Sign in' }));
+            paywall.appendChild(signIn);
+            wrap.appendChild(paywall);
+          } else {
+            // body_html was sanitised server-side via marked + sanitize-html;
+            // assignment via innerHTML here is intentional and reviewed.
+            var body = el('div', { class: 'post-body' });
+            body.innerHTML = data.body_html || '';
+            wrap.appendChild(body);
+          }
+          root.appendChild(wrap);
+        })
+        .catch(function () {
+          root.innerHTML = '';
+          root.appendChild(el('p', { class: 'form-message is-error', text: 'Could not load post. Please refresh.' }));
+        });
+    })();
+  </script>
+</body>
+</html>

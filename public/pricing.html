@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pricing — EasyCoder</title>
+  <meta name="description" content="EasyCoder newsletter pricing — free posts and Pro posts." />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="./index.html" aria-label="EasyCoder — home">EasyCoder<span class="brand-dot" aria-hidden="true">.</span></a>
+      <nav class="site-nav" aria-label="Primary">
+        <ul>
+          <li><a href="./index.html">Home</a></li>
+          <li><a href="./blog.html">Blog</a></li>
+          <li><a href="./pricing.html">Pricing</a></li>
+          <li class="nav-auth" data-auth="signed-out"><a href="./login.html">Sign in</a></li>
+          <li class="nav-auth" data-auth="signed-in" hidden><a href="./dashboard.html">Dashboard</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="pricing-main">
+    <section class="container">
+      <p class="eyebrow">Newsletter</p>
+      <h1>Two tiers, one inbox.</h1>
+      <p class="muted">Subscribe for the deep cuts and the long-form breakdown.</p>
+
+      <div class="pricing-grid">
+        <section class="pricing-card">
+          <p class="panel-eyebrow">Free</p>
+          <h2 class="pricing-title">Free posts</h2>
+          <p class="pricing-price"><span class="pricing-amount">$0</span><span class="pricing-per muted">/ forever</span></p>
+          <p class="pricing-blurb muted">A handful of posts every month. No account needed.</p>
+          <ul class="pricing-features">
+            <li>All free-tier posts, full text</li>
+            <li>Marketing emails when we publish</li>
+            <li>RSS soon</li>
+          </ul>
+          <a class="btn btn-ghost btn-block" href="./blog.html">Read the blog</a>
+        </section>
+
+        <section class="pricing-card is-pro">
+          <p class="panel-eyebrow">Pro</p>
+          <h2 class="pricing-title">Pro posts</h2>
+          <p class="pricing-price"><span class="pricing-amount">$10</span><span class="pricing-per muted">/ month</span></p>
+          <p class="pricing-blurb muted">Paid-only essays, deep dives, and the working code.</p>
+          <ul class="pricing-features">
+            <li>Everything in Free</li>
+            <li>Pro-only posts, full text</li>
+            <li>Cancel anytime from the dashboard</li>
+          </ul>
+          <div id="pricing-cta">
+            <p class="muted small">Checking sign-in…</p>
+          </div>
+        </section>
+      </div>
+
+      <p class="pricing-faq muted">
+        Already have an account?
+        <span class="nav-auth" data-auth="signed-out"><a href="./login.html">Sign in</a> first, then</span>
+        <span class="nav-auth" data-auth="signed-in" hidden>You can</span>
+        click <strong>Subscribe to Pro</strong> below.
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>
+        <span class="brand" style="font-size:0.95rem;">EasyCoder<span class="brand-dot">.</span></span>
+        <span class="muted"> &nbsp;a small demo blog.</span>
+      </p>
+      <ul class="footer-links">
+        <li>&copy; <span id="year"></span> EasyCoder.dev</li>
+        <li><a href="./blog.html">All posts</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var el = document.getElementById('year');
+      if (el) el.textContent = new Date().getFullYear();
+    })();
+  </script>
+  <script src="./app.js"></script>
+  <script>
+    (function () {
+      var cta = document.getElementById('pricing-cta');
+      if (!cta) return;
+
+      fetch('/api/me', { credentials: 'same-origin' })
+        .then(function (r) {
+          if (r.status === 200) return r.json();
+          return null;
+        })
+        .then(function (user) {
+          cta.innerHTML = '';
+          if (!user) {
+            var a = document.createElement('a');
+            a.className = 'btn btn-primary btn-block';
+            a.href = './login.html?next=./pricing.html';
+            a.textContent = 'Sign in to subscribe';
+            cta.appendChild(a);
+            return;
+          }
+          if (user.subscription && user.subscription.active) {
+            var note = document.createElement('p');
+            note.className = 'form-message is-success';
+            note.textContent = 'You already have Pro.';
+            cta.appendChild(note);
+            var dash = document.createElement('a');
+            dash.className = 'btn btn-ghost btn-block';
+            dash.href = './dashboard.html';
+            dash.textContent = 'Open dashboard';
+            cta.appendChild(dash);
+            return;
+          }
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'btn btn-primary btn-block';
+          btn.id = 'pricing-subscribe-btn';
+          btn.textContent = 'Subscribe to Pro';
+          cta.appendChild(btn);
+          var msg = document.createElement('p');
+          msg.className = 'form-message';
+          msg.id = 'pricing-msg';
+          cta.appendChild(msg);
+          btn.addEventListener('click', function () {
+            btn.disabled = true;
+            msg.className = 'form-message';
+            msg.textContent = 'Opening checkout…';
+            fetch('/api/checkout', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'same-origin',
+              body: '{}',
+            })
+              .then(function (r) { return r.json().then(function (d) { return { status: r.status, data: d }; }); })
+              .then(function (out) {
+                if (out.status === 200 && out.data && out.data.url) {
+                  window.location.href = out.data.url;
+                  return;
+                }
+                msg.className = 'form-message is-error';
+                msg.textContent = (out.data && out.data.error) || 'Checkout failed.';
+                btn.disabled = false;
+              })
+              .catch(function () {
+                msg.className = 'form-message is-error';
+                msg.textContent = 'Network error — please try again.';
+                btn.disabled = false;
+              });
+          });
+        })
+        .catch(function () {
+          cta.innerHTML = '';
+          cta.appendChild(document.createTextNode('Could not load subscription status.'));
+        });
+    })();
+  </script>
+</body>
+</html>

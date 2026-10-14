@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Grant Pro access — EasyCoder</title>
+  <meta name="color-scheme" content="light dark" />
+  <link rel="stylesheet" href="../styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="../index.html" aria-label="EasyCoder — home">EasyCoder<span class="brand-dot" aria-hidden="true">.</span></a>
+      <nav class="site-nav" aria-label="Primary">
+        <ul>
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="../blog.html">Blog</a></li>
+          <li><a href="../pricing.html">Pricing</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="auth-main">
+    <section class="auth-card">
+      <h1 class="auth-title">Dev grant — Pro access</h1>
+      <p class="auth-sub" id="sub">
+        This page is for the dev-only flow that flips your account to Pro
+        when Stripe isn't configured. In production this endpoint returns
+        403.
+      </p>
+      <p class="form-message" id="form-message" role="status" aria-live="polite">Working…</p>
+      <p class="auth-foot">
+        <a href="../dashboard.html">Back to dashboard</a>
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>&copy; <span id="year"></span> EasyCoder.dev</p>
+      <p class="muted">A small demo app shipped from an EasyCoder workspace.</p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var el = document.getElementById('year');
+      if (el) el.textContent = new Date().getFullYear();
+    })();
+  </script>
+  <script>
+    (function () {
+      var msg = document.getElementById('form-message');
+      var sub = document.getElementById('sub');
+      function qp(name) {
+        var qs = window.location.search.replace(/^\?/, '');
+        if (!qs) return '';
+        var parts = qs.split('&');
+        for (var i = 0; i < parts.length; i++) {
+          var kv = parts[i].split('=');
+          if (decodeURIComponent(kv[0]) === name) {
+            return decodeURIComponent((kv[1] || '').replace(/\+/g, '%20'));
+          }
+        }
+        return '';
+      }
+
+      var userId = qp('user_id');
+      var token = qp('token');
+      if (!userId || !token) {
+        msg.className = 'form-message is-error';
+        msg.textContent = 'Missing grant token. Go back to /pricing.html and click Subscribe again.';
+        return;
+      }
+
+      fetch('/api/dev/grant-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ user_id: Number(userId), token: token, tier: 'paid' }),
+      })
+        .then(function (r) { return r.json().then(function (d) { return { status: r.status, data: d }; }); })
+        .then(function (out) {
+          if (out.status === 200) {
+            msg.className = 'form-message is-success';
+            msg.textContent = 'Pro access granted. Redirecting to your dashboard…';
+            sub.textContent = 'Your account is now on Pro.';
+            setTimeout(function () {
+              window.location.href = '../dashboard.html?upgrade=ok';
+            }, 600);
+          } else {
+            msg.className = 'form-message is-error';
+            msg.textContent = (out.data && out.data.error) || 'Could not grant Pro access.';
+          }
+        })
+        .catch(function () {
+          msg.className = 'form-message is-error';
+          msg.textContent = 'Network error — please try again.';
+        });
+    })();
+  </script>
+</body>
+</html>

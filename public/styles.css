@@ -1358,3 +1358,471 @@ code {
     transition: none;
   }
 }
+
+/* ---------- Newsletter / blog ---------- */
+
+.blog-main {
+  padding: clamp(2.5rem, 6vw, 4.5rem) 0 clamp(3rem, 6vw, 5rem);
+}
+
+.post-main {
+  padding: clamp(2.5rem, 6vw, 4.5rem) 0 clamp(3rem, 6vw, 5rem);
+}
+
+.pricing-main {
+  padding: clamp(2.5rem, 6vw, 4.5rem) 0 clamp(3rem, 6vw, 5rem);
+}
+
+.post-list {
+  list-style: none;
+  margin: 2rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: 1.25rem;
+}
+
+.post-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.25rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.post-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+}
+
+.post-card.is-paid {
+  border-color: color-mix(in srgb, var(--accent) 25%, var(--border));
+}
+
+.post-card-h {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.post-card-title {
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.post-card-title:hover,
+.post-card-title:focus-visible {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.post-card-meta {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.post-card-excerpt {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  flex: 1 1 auto;
+}
+
+.post-card-cta {
+  align-self: flex-start;
+  margin-top: 0.4rem;
+}
+
+.lock-note {
+  display: inline;
+  margin-left: 0.35rem;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.posts-loading {
+  margin: 0;
+  padding: 1rem;
+  color: var(--text-muted);
+  list-style: none;
+}
+
+.posts-empty {
+  margin: 0;
+  padding: 1rem;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  text-align: center;
+}
+
+.subscription-badge {
+  display: inline-block;
+  align-self: flex-start;
+  padding: 0.18rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.subscription-badge.is-pro {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+}
+
+.subscription-badge.is-free {
+  color: var(--text-muted);
+}
+
+.profile-meta-tier {
+  margin: 0.4rem 0 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ---------- Newsletter capture form (landing + footer) ---------- */
+
+.newsletter-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 1.25rem 0 0;
+  max-width: 32rem;
+}
+
+.newsletter-form .field {
+  flex: 1 1 16rem;
+}
+
+.newsletter-form button {
+  flex: 0 0 auto;
+}
+
+.newsletter-form-inline {
+  flex-wrap: wrap;
+  margin: 0;
+}
+
+.newsletter-form-inline input {
+  min-width: 12rem;
+}
+
+/* ---------- Post page ---------- */
+
+.post-article {
+  max-width: 40rem;
+  margin: 0 auto;
+}
+
+.post-title {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  margin: 0 0 0.5rem;
+}
+
+.post-meta {
+  margin: 0 0 1.5rem;
+  font-size: 0.9rem;
+}
+
+.post-body {
+  font-size: 1.02rem;
+  line-height: 1.7;
+}
+
+.post-body p {
+  margin: 0 0 1rem;
+}
+
+.post-body h2,
+.post-body h3 {
+  margin: 1.6rem 0 0.6rem;
+}
+
+.post-body code {
+  font-size: 0.9em;
+}
+
+.post-body pre {
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+}
+
+.post-body pre code {
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+
+.post-body blockquote {
+  margin: 1rem 0;
+  padding: 0.4rem 1rem;
+  border-left: 3px solid var(--accent);
+  color: var(--text-muted);
+}
+
+.paywall {
+  margin-top: 1rem;
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+  border-radius: 12px;
+}
+
+.paywall-message {
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.paywall-excerpt {
+  margin: 0 0 1rem;
+}
+
+.paywall-signin {
+  margin: 0.75rem 0 0;
+  font-size: 0.9rem;
+}
+
+/* ---------- Pricing page ---------- */
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  margin: 2rem 0 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .pricing-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.pricing-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.pricing-card.is-pro {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--text) 6%, transparent),
+    0 8px 24px -16px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.pricing-title {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.pricing-price {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.pricing-amount {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.pricing-per {
+  font-size: 0.95rem;
+}
+
+.pricing-blurb {
+  margin: 0;
+}
+
+.pricing-features {
+  list-style: none;
+  margin: 0.5rem 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.pricing-features li::before {
+  content: "·";
+  color: var(--accent);
+  font-weight: 700;
+  margin-right: 0.5rem;
+}
+
+.pricing-card .btn-block {
+  margin-top: auto;
+}
+
+.pricing-faq {
+  margin: 1.5rem 0 0;
+  font-size: 0.95rem;
+}
+
+.pricing-faq .small {
+  font-size: 0.9rem;
+}
+
+/* ---------- Dashboard: posts (admin) editor ---------- */
+
+.posts-section .post-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin: 1rem 0 1.25rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-alt);
+}
+
+.posts-section .post-editor .field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.posts-section .post-editor input,
+.posts-section .post-editor textarea,
+.posts-section .post-editor select {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.posts-section .post-editor textarea {
+  min-height: 9rem;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  resize: vertical;
+}
+
+.posts-section .post-editor input:focus,
+.posts-section .post-editor textarea:focus,
+.posts-section .post-editor select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.posts-section .post-editor-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.posts-section .post-editor-row .field {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+.posts-section .post-editor .post-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.posts-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.post-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1rem;
+  padding: 0.65rem 0.85rem;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: border-color 0.15s ease;
+}
+
+.post-row:hover {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+}
+
+.post-row-slug {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.post-row-meta {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.post-row-title {
+  flex: 1 1 14rem;
+  min-width: 0;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.post-row-actions {
+  margin-left: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.posts-empty {
+  margin: 0;
+  padding: 1rem;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .btn,
+  .feature,
+  .note-card,
+  .note-action,
+  .note-input,
+  .note-edit-input,
+  .verify-banner,
+  .event-row,
+  .post-card,
+  .post-row {
+    transition: none;
+  }
+}

@@ -522,6 +522,20 @@
 
   function renderProfile(user) {
     var card = el('section', { class: 'profile-card' });
+    var subBadge;
+    if (user.subscription && user.subscription.active) {
+      subBadge = el('span', {
+        class: 'subscription-badge is-pro',
+        text: 'Pro · active',
+      });
+    } else {
+      subBadge = el('span', { class: 'subscription-badge', text: 'Free' });
+    }
+    var tierRow = el('p', { class: 'profile-meta-row muted profile-meta-tier' }, [
+      el('span', { class: 'profile-meta-key', text: 'Plan: ' }),
+      subBadge,
+    ]);
+
     var top = el('div', { class: 'profile-top' }, [
       el('div', { class: 'avatar', 'aria-hidden': 'true' }, [initialsFor(user.email)]),
       el('div', { class: 'profile-id' }, [
@@ -542,6 +556,7 @@
             }),
           ]),
         ]),
+        tierRow,
       ]),
     ]);
 
@@ -1107,15 +1122,359 @@
       root.appendChild(renderProfile(user));
       wireProfile(root, user);
       wireVerifyFlash();
+      wireUpgradeFlash();
       root.appendChild(renderNotesSection(notes));
       wireNotes(root);
       root.appendChild(renderSecuritySection(events));
       if (stats) {
         root.appendChild(renderAdminSection(stats));
+        // Admin posts CRUD lives inside the admin section so the panel
+        // can sit just below the chart row. /api/admin/posts returns
+        // drafts and body_md so the editor can round-trip.
+        var posts = [];
+        try {
+          var pRes = await fetch('/api/admin/posts', { credentials: 'same-origin' });
+          if (pRes.status === 200) {
+            var pj = await pRes.json();
+            posts = (pj && pj.posts) || [];
+          }
+        } catch (e) { /* non-fatal */ }
+        root.appendChild(renderPostsAdmin(posts));
+        wirePostsAdmin();
       }
     } catch (err) {
       root.innerHTML = '<p class="form-message is-error">Could not load your dashboard. Please try refreshing.</p>';
     }
+  }
+
+  // ---------- Posts admin section ----------
+  //
+  // Mirrors the notes CRUD shape but lives inside the admin section. Posts
+  // can be created / edited / published (toggle) / deleted. The markdown
+  // body is sent through the server, which sanitises it before rendering;
+  // we don't try to preview it client-side.
+
+  function renderPostsAdmin(initialPosts) {
+    var wrap = el('section', { class: 'admin-section posts-section' });
+    wrap.appendChild(el('p', { class: 'panel-eyebrow', text: 'Newsletter' }));
+    wrap.appendChild(el('h2', { class: 'section-heading', text: 'Posts' }));
+
+    var msg = el('p', { class: 'form-message', id: 'posts-message' });
+
+    // Editor form. Hidden by default; clicking "New post" reveals it.
+    var editor = el('form', { class: 'post-editor', id: 'post-editor', hidden: true });
+    var slugInput = el('input', { type: 'text', id: 'post-slug', name: 'slug', placeholder: 'my-post-slug', required: 'required', pattern: '[a-z0-9][a-z0-9-]*' });
+    var titleInput = el('input', { type: 'text', id: 'post-title', name: 'title', placeholder: 'Title', required: 'required', maxlength: '200' });
+    var excerptInput = el('input', { type: 'text', id: 'post-excerpt', name: 'excerpt', placeholder: 'One-paragraph excerpt', required: 'required', maxlength: '500' });
+    var bodyInput = el('textarea', { id: 'post-body', name: 'body_md', placeholder: 'Write the post in Markdown…', required: 'required' });
+    var tierSelect = el('select', { id: 'post-tier', name: 'tier' }, [
+      el('option', { value: 'free', text: 'Free' }),
+      el('option', { value: 'paid', text: 'Paid (Pro)' }),
+    ]);
+    var saveBtn = el('button', { type: 'submit', class: 'btn btn-primary', id: 'post-save-btn', text: 'Save post' });
+    var cancelBtn = el('button', { type: 'button', class: 'btn btn-ghost', id: 'post-cancel-btn', text: 'Cancel' });
+
+    editor.appendChild(el('div', { class: 'post-editor-row' }, [
+      el('div', { class: 'field' }, [el('label', { for: 'post-slug', text: 'Slug' }), slugInput]),
+      el('div', { class: 'field' }, [el('label', { for: 'post-tier', text: 'Tier' }), tierSelect]),
+    ]));
+    editor.appendChild(el('div', { class: 'field' }, [el('label', { for: 'post-title', text: 'Title' }), titleInput]));
+    editor.appendChild(el('div', { class: 'field' }, [el('label', { for: 'post-excerpt', text: 'Excerpt' }), excerptInput]));
+    editor.appendChild(el('div', { class: 'field' }, [el('label', { for: 'post-body', text: 'Body (Markdown)' }), bodyInput]));
+    editor.appendChild(el('div', { class: 'post-editor-actions' }, [cancelBtn, saveBtn]));
+
+    wrap.appendChild(editor);
+    wrap.appendChild(msg);
+
+    var toolbar = el('div', { class: 'post-editor-actions' }, [
+      el('button', { type: 'button', class: 'btn btn-primary', id: 'post-new-btn', text: 'New post' }),
+    ]);
+    wrap.appendChild(toolbar);
+
+    var table = el('div', { class: 'posts-table', id: 'posts-table' });
+    wrap.appendChild(table);
+
+    if (!initialPosts || initialPosts.length === 0) {
+      table.appendChild(el('p', { class: 'posts-empty muted', text: 'No posts yet. Click "New post" to add the first one.' }));
+    } else {
+      initialPosts.forEach(function (p) { table.appendChild(renderPostRow(p, editor, fields, table)); });
+    }
+    return wrap;
+  }
+
+  function fields() {
+    return {
+      slugInput: $('post-slug'),
+      titleInput: $('post-title'),
+      excerptInput: $('post-excerpt'),
+      bodyInput: $('post-body'),
+      tierSelect: $('post-tier'),
+    };
+  }
+
+  function renderPostRow(post, editor, fields, table) {
+    var row = el('article', { class: 'post-row', 'data-id': String(post.id), 'data-slug': post.slug });
+    var badge = el('span', {
+      class: 'subscription-badge' + (post.tier === 'paid' ? ' is-pro' : ''),
+      text: post.tier === 'paid' ? 'Pro' : 'Free',
+    });
+    var titleLink = el('span', { class: 'post-row-title', text: post.title });
+    var slugInfo = el('span', { class: 'post-row-slug', text: '/' + post.slug });
+    var status = el('span', {
+      class: 'post-row-meta',
+      text: post.published ? 'Published' + (post.published_at ? ' · ' + formatDate(post.published_at) : '') : 'Draft',
+    });
+    var editBtn = el('button', { type: 'button', class: 'note-action', 'data-action': 'edit', text: 'Edit' });
+    var publishBtn = el('button', { type: 'button', class: 'note-action', 'data-action': 'publish', text: post.published ? 'Unpublish' : 'Publish' });
+    var delBtn = el('button', { type: 'button', class: 'note-action note-action-danger', 'data-action': 'delete', text: 'Delete' });
+    var viewLink = el('a', { href: './post.html?slug=' + encodeURIComponent(post.slug), class: 'note-action', text: 'View' });
+
+    var left = el('div', { class: 'profile-id' }, [
+      el('div', null, [badge, ' ', titleLink, ' ', slugLink(slugInfo)]),
+      status,
+    ]);
+    var actions = el('div', { class: 'post-row-actions' }, [viewLink, editBtn, publishBtn, delBtn]);
+    row.appendChild(left);
+    row.appendChild(actions);
+    return row;
+  }
+
+  function slugLink(slugEl) {
+    // Tiny wrapper so we keep one shape — only used to put the slug next to
+    // the title in the row. Returns the input element untouched.
+    return slugEl;
+  }
+
+  function wirePostsAdmin() {
+    var newBtn = $('post-new-btn');
+    var editor = $('post-editor');
+    var cancelBtn = $('post-cancel-btn');
+    var msg = $('posts-message');
+    var table = $('posts-table');
+
+    if (newBtn && editor) {
+      newBtn.addEventListener('click', function () {
+        var f = fields();
+        if (f.slugInput) f.slugInput.value = '';
+        if (f.titleInput) f.titleInput.value = '';
+        if (f.excerptInput) f.excerptInput.value = '';
+        if (f.bodyInput) f.bodyInput.value = '';
+        if (f.tierSelect) f.tierSelect.value = 'free';
+        editor.removeAttribute('hidden');
+        editor.dataset.editingId = '';
+        setMessage(msg, '', null);
+        if (f.slugInput) f.slugInput.focus();
+      });
+    }
+    if (cancelBtn && editor) {
+      cancelBtn.addEventListener('click', function () {
+        editor.setAttribute('hidden', '');
+        editor.dataset.editingId = '';
+        setMessage(msg, '', null);
+      });
+    }
+    if (editor) {
+      editor.addEventListener('submit', async function (ev) {
+        ev.preventDefault();
+        var f = fields();
+        var payload = {
+          slug: (f.slugInput && f.slugInput.value || '').trim().toLowerCase(),
+          title: (f.titleInput && f.titleInput.value || '').trim(),
+          excerpt: (f.excerptInput && f.excerptInput.value || '').trim(),
+          body_md: f.bodyInput ? f.bodyInput.value : '',
+          tier: (f.tierSelect && f.tierSelect.value) || 'free',
+        };
+        if (!payload.slug || !payload.title || !payload.excerpt || !payload.body_md) {
+          setMessage(msg, 'Slug, title, excerpt, and body are all required.', 'error');
+          return;
+        }
+        var saveBtn = $('post-save-btn');
+        if (saveBtn) saveBtn.disabled = true;
+        setMessage(msg, 'Saving…', null);
+        try {
+          var editingId = editor.dataset.editingId || '';
+          var out;
+          if (editingId) {
+            out = await patchJSON('/api/admin/posts/' + editingId, payload);
+          } else {
+            out = await postJSON('/api/admin/posts', payload);
+          }
+          if (maybeRedirectOn401(out.status)) return;
+          if (out.status === 200) {
+            setMessage(msg, editingId ? 'Post updated.' : 'Post created.', 'success');
+            // Replace / insert row at the top of the table.
+            if (table) {
+              var existing = table.querySelector('.post-row[data-id="' + out.data.id + '"]');
+              var newRow = renderPostRow(out.data, editor, fields, table);
+              if (existing) existing.replaceWith(newRow);
+              else {
+                var empty = table.querySelector('.posts-empty');
+                if (empty) empty.remove();
+                table.insertBefore(newRow, table.firstChild);
+              }
+            }
+            editor.setAttribute('hidden', '');
+            editor.dataset.editingId = '';
+          } else if (out.status === 409) {
+            setMessage(msg, (out.data && out.data.error) || 'Slug already exists.', 'error');
+          } else {
+            setMessage(msg, (out.data && out.data.error) || 'Could not save post.', 'error');
+          }
+        } catch (err) {
+          setMessage(msg, 'Network error — please try again.', 'error');
+        } finally {
+          var sb = $('post-save-btn');
+          if (sb) sb.disabled = false;
+        }
+      });
+    }
+
+    if (table) {
+      table.addEventListener('click', async function (ev) {
+        var t = ev.target;
+        if (!(t instanceof Element)) return;
+        var row = t.closest('.post-row');
+        if (!row) return;
+        var id = row.getAttribute('data-id');
+        var action = t.getAttribute('data-action');
+        if (!action) return;
+        if (action === 'edit') {
+          // Use the admin list endpoint which returns body_md as written,
+          // so edits round-trip losslessly (vs. round-tripping HTML).
+          try {
+            var r = await fetch('/api/admin/posts', { credentials: 'same-origin' });
+            if (r.status !== 200) {
+              setMessage(msg, 'Could not load post body for editing.', 'error');
+              return;
+            }
+            var pj = await r.json();
+            var data = (pj.posts || []).find(function (p) { return String(p.id) === String(id); });
+            if (!data) {
+              setMessage(msg, 'Post not found in admin list.', 'error');
+              return;
+            }
+            var f = fields();
+            if (f.slugInput) f.slugInput.value = data.slug;
+            if (f.titleInput) f.titleInput.value = data.title;
+            if (f.excerptInput) f.excerptInput.value = data.excerpt;
+            if (f.bodyInput) f.bodyInput.value = data.body_md || '';
+            if (f.tierSelect) f.tierSelect.value = data.tier;
+            var editorEl = $('post-editor');
+            if (editorEl) {
+              editorEl.removeAttribute('hidden');
+              editorEl.dataset.editingId = id;
+            }
+            setMessage(msg, 'Editing post ' + data.slug + '.', null);
+          } catch (e) {
+            setMessage(msg, 'Network error — please try again.', 'error');
+          }
+        } else if (action === 'publish') {
+          var want = (t.textContent || '').trim() === 'Publish';
+          try {
+            var out = await patchJSON('/api/admin/posts/' + id + '/publish', { published: want });
+            if (maybeRedirectOn401(out.status)) return;
+            if (out.status === 200) {
+              var fresh = out.data;
+              var newRow = renderPostRow(fresh, $('post-editor'), fields, table);
+              row.replaceWith(newRow);
+              setMessage(msg, fresh.published ? 'Published.' : 'Unpublished.', 'success');
+            } else {
+              setMessage(msg, (out.data && out.data.error) || 'Could not toggle publish.', 'error');
+            }
+          } catch (e) {
+            setMessage(msg, 'Network error — please try again.', 'error');
+          }
+        } else if (action === 'delete') {
+          if (!window.confirm('Delete this post?')) return;
+          try {
+            var out2 = await deleteJSON('/api/admin/posts/' + id);
+            if (maybeRedirectOn401(out2.status)) return;
+            if (out2.status === 204) {
+              row.remove();
+              var remaining = document.querySelectorAll('.post-row').length;
+              if (remaining === 0 && table) {
+                table.appendChild(el('p', { class: 'posts-empty muted', text: 'No posts yet. Click "New post" to add the first one.' }));
+              }
+            } else {
+              alert('Could not delete post.');
+            }
+          } catch (e) {
+            alert('Network error — please try again.');
+          }
+        }
+      });
+    }
+  }
+
+  // Best-effort round-trip from sanitised HTML back to markdown for the
+  // "Edit" button. Real product would store and return body_md alongside;
+  // for the demo this is enough to make edits workable.
+  function stripHtml(html) {
+    var tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    return tmp.textContent || '';
+  }
+
+  // ---------- Newsletter capture (landing) ----------
+  //
+  // Used by /index.html and any future footer form. Always-idempotent
+  // server-side (UNIQUE on lower(email)), so re-submitting just returns
+  // the same success message.
+  function wireNewsletterCapture() {
+    var forms = document.querySelectorAll('.newsletter-form');
+    forms.forEach(function (form) {
+      var msg = form.querySelector('.newsletter-form-msg');
+      var btn = form.querySelector('button[type="submit"]');
+      var input = form.querySelector('input[type="email"]');
+      if (!msg || !btn || !input) return;
+      form.addEventListener('submit', async function (ev) {
+        ev.preventDefault();
+        var email = input.value.trim();
+        if (!email) {
+          msg.className = 'form-message is-error';
+          msg.textContent = 'Please enter your email.';
+          return;
+        }
+        btn.disabled = true;
+        msg.className = 'form-message';
+        msg.textContent = 'Adding you to the list…';
+        try {
+          var out = await postJSON('/api/email-capture', { email: email });
+          if (out.status === 200) {
+            msg.className = 'form-message is-success';
+            msg.textContent = 'Thanks — you are on the list.';
+            form.reset();
+          } else if (out.status === 429) {
+            msg.className = 'form-message is-error';
+            msg.textContent = (out.data && out.data.error) || 'Too many requests.';
+          } else {
+            msg.className = 'form-message is-error';
+            msg.textContent = (out.data && out.data.error) || 'Could not subscribe.';
+          }
+        } catch (err) {
+          msg.className = 'form-message is-error';
+          msg.textContent = 'Network error — please try again.';
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    });
+  }
+
+  // ---------- Dashboard : flash messages ----------
+  //
+  // /dashboard.html?upgrade=ok is set by the dev-grant page (and by Stripe
+  // Checkout on real upgrades). Surface a one-time success line the same
+  // way /login.html?reset=ok does for password reset.
+  function wireUpgradeFlash() {
+    var msg = $('profile-message');
+    if (!msg) return;
+    if (paramFromUrl('upgrade') !== 'ok') return;
+    setMessage(msg, 'You are now on Pro. Welcome.', 'success');
+    try {
+      var cleanUrl = window.location.pathname + window.location.hash;
+      window.history.replaceState(null, '', cleanUrl);
+    } catch (e) { /* ignore */ }
   }
 
   // ---------- Boot ----------
@@ -1128,6 +1487,7 @@
     wireResetForm();
     wireVerifyPage();
     wireSignOutButtons();
+    wireNewsletterCapture();
     loadDashboard();
   });
 })();

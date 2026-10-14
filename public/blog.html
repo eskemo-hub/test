@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Blog — EasyCoder</title>
+  <meta name="description" content="Free and Pro posts from the EasyCoder demo blog." />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="./index.html" aria-label="EasyCoder — home">EasyCoder<span class="brand-dot" aria-hidden="true">.</span></a>
+      <nav class="site-nav" aria-label="Primary">
+        <ul>
+          <li><a href="./index.html">Home</a></li>
+          <li><a href="./blog.html">Blog</a></li>
+          <li><a href="./pricing.html">Pricing</a></li>
+          <li class="nav-auth" data-auth="signed-out"><a href="./login.html">Sign in</a></li>
+          <li class="nav-auth" data-auth="signed-in" hidden><a href="./dashboard.html">Dashboard</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="blog-main">
+    <section class="container">
+      <p class="eyebrow">Posts</p>
+      <h1>The blog</h1>
+      <p class="muted">Free posts for everyone. Subscribe to read the Pro ones in full.</p>
+
+      <ul class="post-list" id="post-list">
+        <li class="posts-loading muted">Loading posts…</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>
+        <span class="brand" style="font-size:0.95rem;">EasyCoder<span class="brand-dot">.</span></span>
+        <span class="muted"> &nbsp;a small demo blog.</span>
+      </p>
+      <ul class="footer-links">
+        <li>&copy; <span id="year"></span> EasyCoder.dev</li>
+        <li><a href="./pricing.html">Pricing</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var el = document.getElementById('year');
+      if (el) el.textContent = new Date().getFullYear();
+    })();
+  </script>
+  <script src="./app.js"></script>
+  <script>
+    (function () {
+      // Render the post list. Public endpoint — anonymous users can call it.
+      var list = document.getElementById('post-list');
+      if (!list) return;
+
+      function el(tag, attrs, children) {
+        var n = document.createElement(tag);
+        if (attrs) for (var k in attrs) {
+          if (k === 'class') n.className = attrs[k];
+          else if (k === 'text') n.textContent = attrs[k];
+          else if (k === 'html') n.innerHTML = attrs[k];
+          else n.setAttribute(k, attrs[k]);
+        }
+        (children || []).forEach(function (c) {
+          if (c == null) return;
+          if (typeof c === 'string') n.appendChild(document.createTextNode(c));
+          else n.appendChild(c);
+        });
+        return n;
+      }
+      function formatDate(iso) {
+        if (!iso) return '';
+        var d = new Date(iso);
+        if (isNaN(d.getTime())) return '';
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      }
+
+      fetch('/api/posts', { credentials: 'same-origin' })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          var posts = (data && data.posts) || [];
+          list.innerHTML = '';
+          if (posts.length === 0) {
+            list.appendChild(el('li', { class: 'posts-empty muted', text: 'No posts yet. Check back soon.' }));
+            return;
+          }
+          posts.forEach(function (p) {
+            var li = el('li', { class: 'post-card' + (p.tier === 'paid' ? ' is-paid' : '') });
+            var badge = el('span', { class: 'subscription-badge' + (p.tier === 'paid' ? ' is-pro' : ''), text: p.tier === 'paid' ? 'Pro' : 'Free' });
+            var titleLink = el('a', { href: './post.html?slug=' + encodeURIComponent(p.slug), text: p.title, class: 'post-card-title' });
+            var meta = el('p', { class: 'post-card-meta muted' });
+            if (p.published_at) meta.appendChild(document.createTextNode(formatDate(p.published_at) + ' · '));
+            meta.appendChild(document.createTextNode(p.tier === 'paid' ? 'Pro article' : 'Free article'));
+            var ex = el('p', { class: 'post-card-excerpt' });
+            if (p.locked) {
+              ex.appendChild(document.createTextNode(p.excerpt + ' '));
+              ex.appendChild(el('span', { class: 'lock-note', text: 'Locked — Pro subscribers only.' }));
+            } else {
+              ex.textContent = p.excerpt;
+            }
+            li.appendChild(badge);
+            li.appendChild(el('h2', { class: 'post-card-h', html: '' }));
+            li.lastChild.appendChild(titleLink);
+            li.appendChild(meta);
+            li.appendChild(ex);
+            if (p.tier === 'paid' && p.locked) {
+              li.appendChild(el('a', { class: 'btn btn-primary post-card-cta', href: './pricing.html', text: 'Get Pro' }));
+            } else {
+              li.appendChild(el('a', { class: 'btn btn-ghost post-card-cta', href: './post.html?slug=' + encodeURIComponent(p.slug), text: 'Read post' }));
+            }
+            list.appendChild(li);
+          });
+        })
+        .catch(function () {
+          list.innerHTML = '';
+          list.appendChild(el('li', { class: 'form-message is-error', text: 'Could not load posts. Please refresh.' }));
+        });
+    })();
+  </script>
+</body>
+</html>

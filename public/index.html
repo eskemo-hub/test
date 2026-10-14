@@ -18,7 +18,9 @@
         <ul>
           <li><a href="#features">Features</a></li>
           <li><a href="#how">How it works</a></li>
-          <li><a href="#security">Security</a></li>
+          <li><a href="#newsletter">Newsletter</a></li>
+          <li><a href="./blog.html">Blog</a></li>
+          <li><a href="./pricing.html">Pricing</a></li>
           <li><a href="#faq">FAQ</a></li>
           <li class="nav-auth" data-auth="signed-out"><a href="./login.html">Sign in</a></li>
           <li class="nav-auth" data-auth="signed-in" hidden><a href="./dashboard.html">Dashboard</a></li>
@@ -173,6 +175,25 @@
             <p>Resource caps, no Docker socket, isolated filesystem per workspace.</p>
           </li>
         </ul>
+      </div>
+    </section>
+
+    <section id="newsletter" class="section section-alt">
+      <div class="container">
+        <p class="eyebrow">Newsletter</p>
+        <h2>Free posts, free signup</h2>
+        <p class="muted">Drop your email to get new free posts in your inbox. Pro posts are unlocked with a subscription — no Stripe account needed in dev.</p>
+        <form class="newsletter-form" id="newsletter-form" novalidate>
+          <div class="field">
+            <label for="newsletter-email">Email</label>
+            <input id="newsletter-email" name="email" type="email" autocomplete="email" required />
+          </div>
+          <button type="submit" class="btn btn-primary">Subscribe</button>
+          <p class="form-message newsletter-form-msg" id="newsletter-form-msg" role="status" aria-live="polite"></p>
+        </form>
+        <p class="muted small" style="margin-top:0.75rem;font-size:0.9rem;">
+          Pro tier is $10/month — see <a href="./pricing.html">pricing</a>.
+        </p>
       </div>
     </section>
 
