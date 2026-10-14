@@ -48,6 +48,10 @@ this workspace without any extra files:
 | `NODE_ENV`     | Set to `production` to mark the cookie `secure`.       |
 | `APP_DATA_DIR` | Directory for local runtime state (default `/data` in production, `.data/` locally). |
 | `ADMIN_EMAILS` | Comma-separated list of emails to auto-promote to admin on login/register. See [Admin access](#admin-access). |
+| `STRIPE_SECRET_KEY` | Optional. Stripe API key. Without it `/api/checkout` returns the dev-grant URL and the webhook returns 503. |
+| `STRIPE_WEBHOOK_SECRET` | Optional. Webhook signing secret. |
+| `STRIPE_PRICE_ID` | Optional. Recurring price id used by `/api/checkout`. |
+| `PUBLIC_ORIGIN` | Optional. Used to build Stripe Checkout success/cancel URLs. |
 
 To use your own database locally without touching the committed fallback,
 copy `.env.example` (or just create `.env`) and export the values before
@@ -129,6 +133,17 @@ or when a session is suspected to be compromised.
 | PATCH  | `/api/notes/:id`              | `{ body }`                            | `200 { id, body, created_at, updated_at }` or `404`         |
 | DELETE | `/api/notes/:id`              | —                                     | `204` or `404`                                              |
 | GET    | `/api/admin/stats`            | —                                     | `200 { totalUsers, totalNotes, signupsByDay, notesByDay }`  |
+| GET    | `/api/posts`                  | —                                     | `200 { posts: [...] }` — visible posts (see Newsletter section); admin sees drafts |
+| GET    | `/api/posts/:slug`            | —                                     | `200 { …, body_html }` for unlocked posts; `{locked: true, tier: 'paid', excerpt}` for paid posts to non-subscribers; 404 for missing |
+| POST   | `/api/email-capture`          | `{ email }`                           | `200 { ok: true }` — dedupes by lower(email), 5/min/IP, 429 over |
+| POST   | `/api/checkout`               | —                                     | `200 { url }` — Stripe Checkout URL when keys are set, else `/dev/grant-subscription.html?tier=paid&user_id=…&token=…`. 10/min/user, 429 over. 409 if already Pro. |
+| POST   | `/api/dev/grant-subscription` | `{ user_id, token, tier }`            | `200 { ok: true, tier: 'paid' }`. 403 in production. Bumps `session_epoch`. |
+| POST   | `/api/stripe/webhook`         | (raw Stripe event w/ signature)       | `200 { received: true }` on verified events; 400 on bad signature |
+| GET    | `/api/admin/posts`            | —                                     | `200 { posts: [...] }` admin-only; drafts included; `body_md` and `body_html` |
+| POST   | `/api/admin/posts`            | `{ slug, title, excerpt, body_md, tier }` | `200 { …, body_html }` or 409 on duplicate slug |
+| PATCH  | `/api/admin/posts/:id`        | partial fields                        | `200` or 404 / 409 |
+| POST   | `/api/admin/posts/:id/publish`| `{ published: boolean }`              | `200` or 404 |
+| DELETE | `/api/admin/posts/:id`        | —                                     | `204` or 404 |
 
 ### Endpoint notes
 
@@ -186,6 +201,63 @@ format, `/api/me` shape, and the existing routes are unchanged.
   returns the last 50 rows for the caller, newest first. The dashboard
   renders them in a dedicated "Security" panel; audit logging never
   breaks a user flow (a failed INSERT is logged and swallowed).
+
+## Newsletter / blog
+
+A paywalled newsletter on top of the same auth surface. The post format
+is **markdown** — `body_md` is rendered with `marked` and sanitised with
+`sanitize-html` server-side, so the API never hands raw HTML to the
+browser. Each post is `free` (always readable) or `paid` (excerpt-only
+unless the caller has an active `user_subscriptions` row).
+
+### Schema
+
+- `posts (id, slug UNIQUE, title, excerpt, body_md, tier CHECK ('free','paid'), published, published_at, created_at, updated_at)` — drafted and unpublished posts are hidden from non-admins; admins always see them.
+- `user_subscriptions (user_id PK, tier, status, stripe_customer_id, stripe_subscription_id, current_period_end, updated_at)` — one row per paying user. Absence of a row means "Free".
+- `email_subscribers (id, email, created_at)` — unique on `lower(email)` for the landing-form dedupe.
+
+### Public flow
+
+- `GET /api/posts` — anon / non-subscribers see free posts full and paid posts excerpt-only (no `body_html`); active subscribers and admins see full body for everything they can list; admins also see drafts.
+- `GET /api/posts/:slug` — same logic with a 404 for unknown / unpublished (non-admin) slugs. Locked paid posts return `{locked: true, tier: 'paid', excerpt}` with no body.
+- `POST /api/email-capture` — dedupes by `lower(email)` and rate-limits 5 requests/min/IP; > 5/min → 429.
+- `POST /api/checkout` — returns `{url}`. With `STRIPE_SECRET_KEY` set, this is a real Stripe Checkout Session URL; otherwise it is the dev-grant URL `/dev/grant-subscription.html?tier=paid&user_id=…&token=…` which uses the dev path below. 10 calls/min/user, then 429.
+- `POST /api/stripe/webhook` — verifies the signature via `Stripe.webhooks.constructEvent` on the **raw** body. Handles `checkout.session.completed` / `customer.subscription.updated` / `customer.subscription.deleted`; everything else is `200 {received: true}` so Stripe doesn't retry.
+
+### Dev-grant flow (no Stripe needed)
+
+`POST /api/dev/grant-subscription` returns 403 when `NODE_ENV=production`.
+In dev it flips the caller's `user_subscriptions` to `{tier:'paid',
+status:'active', current_period_end: now+30d}`, bumps `session_epoch`
+(so the next `/api/me` returns the new badge), and records a
+`dev_grant_subscription` row in `security_events`. The grant URL the
+client opens includes a one-shot token tied to the user id; without a
+matching token the endpoint returns 400. End-to-end: register →
+`/pricing.html` → "Subscribe to Pro" → grant page → dashboard shows
+"Pro · active" and locked posts unlock.
+
+### Admin
+
+- `GET /api/admin/posts` — list every post (drafts included) with `body_md` and `body_html`.
+- `POST /api/admin/posts`, `PATCH /api/admin/posts/:id`, `DELETE /api/admin/posts/:id`, `POST /api/admin/posts/:id/publish` — full CRUD, admin-only (403 otherwise).
+
+The dashboard admin section renders the editor + table; new rows can be
+created, edited (form re-seeds from `body_md` losslessly), published /
+unpublished, and deleted. The markdown source is sanitised before any
+rendered HTML reaches the browser — a `<script>alert(1)</script>` in a
+post body becomes the literal text after parsing.
+
+### Stripe setup (env vars, none required in dev)
+
+| Variable | Purpose |
+| --- | --- |
+| `STRIPE_SECRET_KEY` | API key used by `Stripe(…)`. If absent, `/api/checkout` returns the dev-grant URL. |
+| `STRIPE_WEBHOOK_SECRET` | Signing secret for `constructEvent`. The webhook returns 503 if absent. |
+| `STRIPE_PRICE_ID` | The recurring price id for the Pro subscription; the Checkout session is built with `mode: 'subscription'` against it. |
+| `PUBLIC_ORIGIN` | Used to build the success / cancel URLs on Checkout (e.g. `https://test.app.easycoder.dev`). Defaults to `''` which falls through to a same-origin URL. |
+
+Point Stripe at `POST /api/stripe/webhook` and the three subscribed
+events above will keep `user_subscriptions` in sync.
 
 ## Publishing
 
