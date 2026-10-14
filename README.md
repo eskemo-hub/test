@@ -142,7 +142,7 @@ or when a session is suspected to be compromised.
 | GET    | `/api/admin/posts`            | —                                     | `200 { posts: [...] }` admin-only; drafts included; `body_md` and `body_html` |
 | POST   | `/api/admin/posts`            | `{ slug, title, excerpt, body_md, tier }` | `200 { …, body_html }` or 409 on duplicate slug |
 | PATCH  | `/api/admin/posts/:id`        | partial fields                        | `200` or 404 / 409 |
-| POST   | `/api/admin/posts/:id/publish`| `{ published: boolean }`              | `200` or 404 |
+| PATCH  | `/api/admin/posts/:id/publish`| `{ published: boolean }`              | `200` or 404 |
 | DELETE | `/api/admin/posts/:id`        | —                                     | `204` or 404 |
 
 ### Endpoint notes
@@ -239,7 +239,7 @@ matching token the endpoint returns 400. End-to-end: register →
 ### Admin
 
 - `GET /api/admin/posts` — list every post (drafts included) with `body_md` and `body_html`.
-- `POST /api/admin/posts`, `PATCH /api/admin/posts/:id`, `DELETE /api/admin/posts/:id`, `POST /api/admin/posts/:id/publish` — full CRUD, admin-only (403 otherwise).
+- `POST /api/admin/posts`, `PATCH /api/admin/posts/:id`, `DELETE /api/admin/posts/:id`, `PATCH /api/admin/posts/:id/publish` — full CRUD, admin-only (403 otherwise).
 
 The dashboard admin section renders the editor + table; new rows can be
 created, edited (form re-seeds from `body_md` losslessly), published /

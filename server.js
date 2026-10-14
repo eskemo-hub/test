@@ -1222,8 +1222,10 @@ app.patch('/api/admin/posts/:id', requireAuth, requireAdmin, async (req, res) =>
   }
 });
 
-// Publish toggle. Body: `{ published: boolean }`.
-app.post('/api/admin/posts/:id/publish', requireAuth, requireAdmin, async (req, res) => {
+// Publish toggle. Body: `{ published: boolean }`. PATCH to match the
+// /api/admin/posts/:id partial-update verb and let the wire stay PATCH-only
+// for "state-toggle on this resource" semantics.
+app.patch('/api/admin/posts/:id/publish', requireAuth, requireAdmin, async (req, res) => {
   const id = Number.parseInt(req.params.id, 10);
   if (!Number.isInteger(id) || id <= 0) {
     return res.status(400).json({ error: 'Invalid post id.' });
