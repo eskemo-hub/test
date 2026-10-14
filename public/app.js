@@ -1237,19 +1237,13 @@
     var viewLink = el('a', { href: './post.html?slug=' + encodeURIComponent(post.slug), class: 'note-action', text: 'View' });
 
     var left = el('div', { class: 'profile-id' }, [
-      el('div', null, [badge, ' ', titleLink, ' ', slugLink(slugInfo)]),
+      el('div', null, [badge, ' ', titleLink, ' ', slugInfo]),
       status,
     ]);
     var actions = el('div', { class: 'post-row-actions' }, [viewLink, editBtn, publishBtn, delBtn]);
     row.appendChild(left);
     row.appendChild(actions);
     return row;
-  }
-
-  function slugLink(slugEl) {
-    // Tiny wrapper so we keep one shape — only used to put the slug next to
-    // the title in the row. Returns the input element untouched.
-    return slugEl;
   }
 
   function wirePostsAdmin() {
@@ -1411,15 +1405,6 @@
         }
       });
     }
-  }
-
-  // Best-effort round-trip from sanitised HTML back to markdown for the
-  // "Edit" button. Real product would store and return body_md alongside;
-  // for the demo this is enough to make edits workable.
-  function stripHtml(html) {
-    var tmp = document.createElement('div');
-    tmp.innerHTML = html;
-    return tmp.textContent || '';
   }
 
   // ---------- Newsletter capture (landing) ----------
