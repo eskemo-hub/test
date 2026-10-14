@@ -46,6 +46,14 @@ const config = {
   publicDir: path.join(__dirname, 'public'),
   dataDir,
   adminEmails,
+  // Stripe is optional. When STRIPE_SECRET_KEY is absent, /api/checkout
+  // routes the user through the dev-grant flow so the paywall is
+  // demoable without a Stripe account. Public origin is used to build
+  // Stripe Checkout success/cancel URLs.
+  stripeSecretKey: process.env.STRIPE_SECRET_KEY || '',
+  stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '',
+  stripePriceId: process.env.STRIPE_PRICE_ID || '',
+  publicOrigin: process.env.PUBLIC_ORIGIN || '',
 };
 
 module.exports = config;
