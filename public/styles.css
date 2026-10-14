@@ -533,7 +533,7 @@ code {
   margin: 0.2rem 0 0.4rem;
   font-size: 1.15rem;
   font-weight: 600;
-  word-break: break-all;
+  overflow-wrap: anywhere;
 }
 
 .user-id {
@@ -686,7 +686,7 @@ code {
   margin: 0.2rem 0 0.4rem;
   font-size: 1.05rem;
   font-weight: 600;
-  word-break: break-all;
+  overflow-wrap: anywhere;
 }
 
 .profile-meta-row {

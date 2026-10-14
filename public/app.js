@@ -540,7 +540,14 @@
       el('div', { class: 'avatar', 'aria-hidden': 'true' }, [initialsFor(user.email)]),
       el('div', { class: 'profile-id' }, [
         el('p', { class: 'profile-label', text: 'Signed in as' }),
-        el('p', { class: 'profile-email', text: user.email }),
+        el('p', {
+          class: 'profile-email',
+          html: user.email
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/([@.\-_])/g, '<wbr>$1'),
+        }),
         el('p', { class: 'profile-meta-row muted' }, [
           el('span', { class: 'profile-meta-key', text: 'Member since ' }),
           el('span', { class: 'profile-meta-val', text: formatDate(user.created_at) }),
