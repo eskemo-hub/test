@@ -86,3 +86,52 @@ CREATE TABLE IF NOT EXISTS security_events (
 -- index covers both the filter and the sort.
 CREATE INDEX IF NOT EXISTS security_events_user_id_created_at_idx
   ON security_events (user_id, created_at DESC);
+
+-- ---------- Newsletter / blog ----------
+-- `posts` is the editorial model. `body_md` is markdown — the server passes
+-- it through marked + sanitize-html before rendering, so the API never
+-- hands raw HTML to the browser. `tier` is the paywall gate: 'free' posts
+-- are always readable; 'paid' posts return an excerpt-only payload to
+-- non-subscribers (see /api/posts and /api/posts/:slug). `published`
+-- defaults FALSE so a draft never lands on /blog.html by accident.
+CREATE TABLE IF NOT EXISTS posts (
+  id           SERIAL PRIMARY KEY,
+  slug         TEXT UNIQUE NOT NULL,
+  title        TEXT NOT NULL,
+  excerpt      TEXT NOT NULL,
+  body_md      TEXT NOT NULL,
+  tier         TEXT NOT NULL DEFAULT 'free' CHECK (tier IN ('free','paid')),
+  published    BOOLEAN NOT NULL DEFAULT FALSE,
+  published_at TIMESTAMPTZ,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS posts_tier_published_at_idx
+  ON posts (tier, published_at DESC);
+
+-- One row per user. Free tier is represented by a missing row rather than
+-- `tier='free'`: that's the cheap way to spell "no subscription" without a
+-- second checkout path for the default state. `status` mirrors the Stripe
+-- subscription status ('active', 'trialing', 'past_due', 'canceled', …).
+CREATE TABLE IF NOT EXISTS user_subscriptions (
+  user_id                 INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  tier                    TEXT NOT NULL DEFAULT 'paid' CHECK (tier IN ('paid')),
+  status                  TEXT NOT NULL,
+  stripe_customer_id      TEXT,
+  stripe_subscription_id  TEXT,
+  current_period_end      TIMESTAMPTZ,
+  updated_at              TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Marketing mailing list, decoupled from `users` so people can subscribe
+-- without an account. The unique constraint on `lower(email)` is the
+-- dedupe path for /api/email-capture.
+CREATE TABLE IF NOT EXISTS email_subscribers (
+  id         SERIAL PRIMARY KEY,
+  email      TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS email_subscribers_email_lower_uidx
+  ON email_subscribers (lower(email));
